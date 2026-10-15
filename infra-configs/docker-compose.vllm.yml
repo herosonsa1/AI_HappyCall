@@ -1,0 +1,54 @@
+version: "3.9"
+
+# ============================================================================
+# [GPU 추론 서버 (AI Core Node)] vLLM + Dual GPU (RTX 5090 / RTX 6000 Ada x 2)
+# 폐쇄망 오프라인 모델 마운트 및 Guided JSON / Prefix Caching 최적화 설정
+# ============================================================================
+services:
+  vllm-happycall-engine:
+    image: vllm/vllm-openai:v0.6.4-offline
+    container_name: vllm-happycall-engine
+    restart: unless-stopped
+    ipc: host
+    shm_size: "32gb"
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    ports:
+      - "8000:8000"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0,1
+      - VLLM_USE_V1=1
+      - VLLM_WORKER_MULTIPROC_METHOD=spawn
+      - NCCL_P2P_DISABLE=0
+      - NCCL_IB_DISABLE=1
+      - TZ=Asia/Seoul
+    volumes:
+      - /opt/ai_models/Qwen2.5-32B-Instruct-AWQ:/models/Qwen2.5-32B-Instruct-AWQ:ro
+      - ./logs/vllm:/var/log/vllm
+    command: >
+      --model /models/Qwen2.5-32B-Instruct-AWQ
+      --served-model-name happycall-llm-32b
+      --quantization awq
+      --tensor-parallel-size 2
+      --gpu-memory-utilization 0.90
+      --max-model-len 8192
+      --max-num-seqs 64
+      --enable-prefix-caching
+      --enable-chunked-prefill
+      --guided-decoding-backend outlines
+      --dtype float16
+      --port 8000
+      --disable-log-requests
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 2
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

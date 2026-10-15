@@ -1,0 +1,825 @@
+/* ==========================================================================
+   AI 자동 해피콜 엔터프라이즈 통합 콘솔 - Zero-CDN Light Bento Design System
+   REA Benchmark Evidence ID: ev_cb69f03e63dbb415ecf696b48d2293882eeb53379a840a71b7a2af98d420eabe
+   참조 표준: WhaTap / JENNIFER 5 / flex / Toss Payments / Amaranth 10 / WebSquare AI
+   ========================================================================== */
+
+:root {
+  --bg-canvas: #f5f6f8;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f8fafc;
+  --bg-muted: #f1f5f9;
+  --bg-hover: #f1f5f9;
+  --bg-active-tint: #eff6ff;
+
+  --text-primary: #111827;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-caption: #94a3b8;
+
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-focus: #2563eb;
+
+  --accent-primary: #2563eb;
+  --accent-primary-hover: #1d4ed8;
+  --accent-soft: #dbeafe;
+
+  --status-ok: #059669;
+  --status-ok-bg: #ecfdf5;
+  --status-ok-border: #a7f3d0;
+
+  --status-warn: #d97706;
+  --status-warn-bg: #fffbeb;
+  --status-warn-border: #fde68a;
+
+  --status-danger: #dc2626;
+  --status-danger-bg: #fef2f2;
+  --status-danger-border: #fecaca;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "맑은 고딕", sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* 전체 워크스페이스 레이아웃 (상단 GNB + MDI 탭 + 본문 + 우측 상세 드로어) */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* 상단 엔터프라이즈 헤더 */
+.top-gnb {
+  height: 54px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.brand-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background-color: var(--text-primary);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.5px;
+}
+
+.brand-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.brand-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-left: 10px;
+  border-left: 1px solid var(--border-subtle);
+}
+
+/* 우측 시스템 상태 표시줄 */
+.gnb-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.env-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background-color: var(--status-ok-bg);
+  color: var(--status-ok);
+  border: 1px solid var(--status-ok-border);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--status-ok);
+}
+
+/* WebSquare AI 스타일 MDI 멀티탭 네비게이션 바 */
+.mdi-tab-bar {
+  height: 42px;
+  background-color: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.mdi-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.mdi-tab {
+  height: 35px;
+  padding: 0 16px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.mdi-tab:hover {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.mdi-tab.active {
+  background-color: var(--bg-surface);
+  color: var(--accent-primary);
+  border-color: var(--border-subtle);
+  position: relative;
+}
+
+.mdi-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--bg-surface);
+}
+
+.tab-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background-color: var(--bg-muted);
+  color: var(--text-secondary);
+}
+
+.mdi-tab.active .tab-count-badge {
+  background-color: var(--accent-soft);
+  color: var(--accent-primary);
+}
+
+.mdi-meta-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 8px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* 메인 컨텐츠 + 우측 도킹 영역 */
+.workspace-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.main-viewport {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px 28px 20px;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* Bento Grid KPI Strip */
+.bento-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.bento-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  letter-spacing: -0.5px;
+}
+
+.kpi-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.kpi-subcard {
+  margin-top: 8px;
+  padding: 5px 8px;
+  background-color: var(--bg-subtle);
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 2단/3단 Bento 레이아웃 */
+.bento-row-2col {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.bento-row-equal {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.benchmark-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* JENNIFER 5 X-View 산점도 및 콜스택 드릴다운 영역 */
+.xview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.xview-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+#xviewScatterCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+.xview-drilldown-box {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.drilldown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.latency-bar-track {
+  display: flex;
+  width: 100%;
+  height: 22px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  margin-bottom: 8px;
+}
+
+.latency-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.seg-vad { background-color: #64748b; }
+.seg-stt { background-color: #2563eb; }
+.seg-llm { background-color: #0f172a; }
+.seg-tts { background-color: #059669; }
+.seg-db  { background-color: #d97706; }
+
+/* WhaTap Flex Board 30채널 그리드 */
+.channel-matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.channel-cell {
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 7px 8px;
+  background-color: var(--bg-surface);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.channel-cell:hover {
+  border-color: var(--accent-primary);
+}
+
+.channel-cell.ch-active {
+  background-color: var(--bg-active-tint);
+  border-color: #93c5fd;
+}
+
+.channel-cell.ch-dtmf {
+  background-color: var(--status-ok-bg);
+  border-color: var(--status-ok-border);
+}
+
+.channel-cell.ch-escalated {
+  background-color: var(--status-warn-bg);
+  border-color: var(--status-warn-border);
+}
+
+.ch-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 3px;
+}
+
+.ch-stage {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* OpsNow360 & Ncloud Cloud Insight 인프라 노드 카드 */
+.infra-node-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.infra-node-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  background-color: var(--bg-surface);
+}
+
+.infra-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.infra-node-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.infra-node-engine {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.metric-bar-group {
+  margin-bottom: 8px;
+}
+
+.metric-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-bottom: 3px;
+}
+
+.metric-bar-bg {
+  width: 100%;
+  height: 7px;
+  background-color: var(--bg-muted);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  background-color: var(--accent-primary);
+  border-radius: 4px;
+}
+
+/* Toss Payments & flex 스타일 필터 바 */
+.filter-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-chip-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.filter-chip:hover {
+  border-color: var(--border-strong);
+  background-color: var(--bg-subtle);
+}
+
+.filter-chip.active {
+  background-color: var(--text-primary);
+  color: #ffffff;
+  border-color: var(--text-primary);
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-text {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  outline: none;
+}
+
+.input-text:focus {
+  border-color: var(--border-focus);
+}
+
+/* 버튼 시스템 */
+.btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.btn:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-primary-hover);
+  border-color: var(--accent-primary-hover);
+}
+
+.btn-success {
+  background-color: var(--status-ok);
+  border-color: var(--status-ok);
+  color: #ffffff;
+}
+
+.btn-success:hover {
+  background-color: #047857;
+}
+
+/* WebSquare / Toss 스타일 고밀도 데이터 그리드 */
+.data-grid-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-surface);
+}
+
+.enterprise-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.enterprise-table th {
+  background-color: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.enterprise-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.enterprise-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.enterprise-table tbody tr:hover {
+  background-color: var(--bg-hover);
+}
+
+.enterprise-table tbody tr.selected-row {
+  background-color: var(--bg-active-tint);
+}
+
+/* 상태 배지 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge-ok {
+  background-color: var(--status-ok-bg);
+  color: var(--status-ok);
+  border-color: var(--status-ok-border);
+}
+
+.badge-warn {
+  background-color: var(--status-warn-bg);
+  color: var(--status-warn);
+  border-color: var(--status-warn-border);
+}
+
+.badge-danger {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger);
+  border-color: var(--status-danger-border);
+}
+
+.badge-neutral {
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+}
+
+.badge-blue {
+  background-color: var(--bg-active-tint);
+  color: var(--accent-primary);
+  border-color: #bfdbfe;
+}
+
+/* 컨텍스트 유지형 우측 슬라이드 드로어 (flex / Amaranth 10 표준) */
+.slide-over-drawer {
+  position: fixed;
+  top: 54px;
+  right: 0;
+  bottom: 0;
+  width: 560px;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border-strong);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-over-drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-subtle);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px 28px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drawer-section {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  background-color: var(--bg-surface);
+}
+
+.drawer-section-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* STT 화자 분리 타임라인 */
+.transcript-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.transcript-item {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  font-size: 12.5px;
+}
+
+.transcript-item.speaker-bot {
+  background-color: var(--bg-subtle);
+}
+
+.transcript-item.speaker-customer {
+  background-color: var(--bg-active-tint);
+  border-color: #bfdbfe;
+}
+
+.transcript-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+@media (max-width: 1280px) {
+  .bento-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .bento-row-2col, .bento-row-equal {
+    grid-template-columns: 1fr;
+  }
+  .infra-node-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

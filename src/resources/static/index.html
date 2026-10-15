@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>히어로손해사정 AI 자동 해피콜 &amp; Biz플랫폼·더존 API 통합 관제 시스템</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- 상단 글로벌 네비게이션 바 (GNB) -->
+    <header class="top-gnb">
+      <div class="brand-area">
+        <div class="brand-mark">HR</div>
+        <span class="brand-title">히어로손해사정 AI 자동 해피콜 통합 관제 시스템</span>
+        <span class="brand-subtitle">원수사(한화·캐롯·롯데) 배당감지 · 본인/차량/동의 확인 · Biz플랫폼(접수번호) UPSERT · 더존 쪽지 알림</span>
+      </div>
+
+      <div class="gnb-actions">
+        <div class="env-pill" id="serverEnvBadge">
+          <span class="status-dot"></span>
+          <span id="serverEnvText">LOCAL / 5-Node Cluster 정상 가동</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- WebSquare AI / eXBuilder6 스타일 MDI 멀티탭 바 -->
+    <nav class="mdi-tab-bar">
+      <div class="mdi-tabs">
+        <button type="button" class="mdi-tab active" data-tab="tab-apm">
+          <span>통합 모니터링 및 특이사항 통계 대시보드</span>
+          <span class="tab-count-badge" id="badgeActiveChannels">24/30ch</span>
+        </button>
+        <button type="button" class="mdi-tab" data-tab="tab-ledger">
+          <span>Biz플랫폼 해피콜 원장(접수번호 UPSERT) 및 더존 쪽지 이력</span>
+          <span class="tab-count-badge" id="badgeStagingCount">특이사항 3건</span>
+        </button>
+        <button type="button" class="mdi-tab" data-tab="tab-reconcile">
+          <span>Biz플랫폼 · 더존 API 연계 명세 및 일배치 대사</span>
+          <span class="tab-count-badge">IF-BIZ/DZ</span>
+        </button>
+      </div>
+      <div class="mdi-meta-info">
+        <span>UPSERT Key: <strong>접수번호(receipt_no)</strong></span>
+        <span id="lastSyncedTimeText">최종 동기화: 2026-10-15 14:25:00</span>
+      </div>
+    </nav>
+
+    <!-- 메인 워크스페이스 바디 -->
+    <div class="workspace-body">
+      <main class="main-viewport">
+        <!-- 상단 공통 Bento KPI Strip (히어로손해사정 6대 핵심 지표) -->
+        <section class="bento-kpi-grid">
+          <div class="bento-card">
+            <div class="kpi-label">
+              <span>원수사 배당 감지 및 가동 채널</span>
+              <span class="badge badge-blue">DB 폴링 감시중</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpiActiveChannels">24</span>
+              <span class="kpi-unit">/ 30 채널 (총 1,480건)</span>
+            </div>
+            <div class="kpi-subcard">
+              <span>한화 620 · 캐롯 490</span>
+              <strong>롯데 370건</strong>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="kpi-label">
+              <span>본인·차량·개인정보동의 완수율</span>
+              <span class="badge badge-ok">이름·생년월일·차량번호</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpiConsentRate">94.8</span>
+              <span class="kpi-unit">%</span>
+            </div>
+            <div class="kpi-subcard">
+              <span>키패드(DTMF) 68%</span>
+              <strong>음성(STT) 32%</strong>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="kpi-label">
+              <span>Biz플랫폼 실시간 UPSERT</span>
+              <span class="badge badge-ok">Key: 접수번호</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpiCompletedCalls">1,412</span>
+              <span class="kpi-unit">건 완료</span>
+            </div>
+            <div class="kpi-subcard">
+              <span>실시간 DB 반영률</span>
+              <strong>100.0%</strong>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="kpi-label">
+              <span>배당 담당자 더존 API 쪽지 발송</span>
+              <span class="badge badge-ok">Amaranth 10 연동</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpiDouzoneSent">1,412</span>
+              <span class="kpi-unit">건 발송</span>
+            </div>
+            <div class="kpi-subcard">
+              <span>담당 조사역 즉시 알림</span>
+              <strong>200 OK (100%)</strong>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="kpi-label">
+              <span>특이사항 집중 모니터링</span>
+              <span class="badge badge-warn" id="kpiStagingBadge">집중 관리</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpiStagingPending">68</span>
+              <span class="kpi-unit">건 (금일 누적)</span>
+            </div>
+            <div class="kpi-subcard">
+              <span>인증실패 19 · 불만 14</span>
+              <strong>직접통화희망 35건</strong>
+            </div>
+          </div>
+
+          <div class="bento-card">
+            <div class="kpi-label">
+              <span>평균 턴 응답지연 &amp; 녹취무결성</span>
+              <span class="badge badge-ok">SLA 1,200ms 이내</span>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpiAvgLatency">875</span>
+              <span class="kpi-unit">ms</span>
+            </div>
+            <div class="kpi-subcard">
+              <span>SHA-256 해시 &amp; PII 묵음</span>
+              <strong id="kpiDlqCount">DLQ 0건</strong>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             [TAB 1] 통합 모니터링 및 특이사항 통계 대시보드
+             ================================================================== -->
+        <div class="tab-pane active" id="tab-apm">
+          <!-- 상단: 원수사별(한화/캐롯/롯데) 및 특이사항별(본인확인실패/불만/직접통화) 통계 카드 -->
+          <div class="bento-row-equal" style="margin-bottom: 16px;">
+            <div class="bento-card">
+              <div class="section-header">
+                <div class="section-title-group">
+                  <h2 class="section-title">수탁 원수사별(한화 · 캐롯 · 롯데) 배당 및 해피콜 완수 통계</h2>
+                  <span class="benchmark-tag">Biz플랫폼 실시간 연동</span>
+                </div>
+                <span class="badge badge-blue">클릭 시 해당 원수사 원장 필터링</span>
+              </div>
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px;">
+                <div style="padding:12px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-subtle); cursor:pointer;" data-insurer-jump="HANWHA">
+                  <div style="font-size:12px; color:var(--text-muted); font-weight:600;">한화손해보험 (HANWHA)</div>
+                  <div style="font-size:20px; font-weight:700; font-family:var(--font-mono); margin:4px 0;">620건 <span style="font-size:12px; color:var(--status-ok);">완수 95.3%</span></div>
+                  <div style="font-size:11.5px; color:var(--text-secondary);">UPSERT 591건 · 특이사항 29건</div>
+                </div>
+                <div style="padding:12px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-subtle); cursor:pointer;" data-insurer-jump="CARROT">
+                  <div style="font-size:12px; color:var(--text-muted); font-weight:600;">캐롯손해보험 (CARROT)</div>
+                  <div style="font-size:20px; font-weight:700; font-family:var(--font-mono); margin:4px 0;">490건 <span style="font-size:12px; color:var(--status-ok);">완수 94.7%</span></div>
+                  <div style="font-size:11.5px; color:var(--text-secondary);">UPSERT 464건 · 특이사항 26건</div>
+                </div>
+                <div style="padding:12px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-subtle); cursor:pointer;" data-insurer-jump="LOTTE">
+                  <div style="font-size:12px; color:var(--text-muted); font-weight:600;">롯데손해보험 (LOTTE)</div>
+                  <div style="font-size:20px; font-weight:700; font-family:var(--font-mono); margin:4px 0;">370건 <span style="font-size:12px; color:var(--status-ok);">완수 96.5%</span></div>
+                  <div style="font-size:11.5px; color:var(--text-secondary);">UPSERT 357건 · 특이사항 13건</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bento-card">
+              <div class="section-header">
+                <div class="section-title-group">
+                  <h2 class="section-title">특이사항 유형별(본인확인실패 · 고객불만 · 직접통화희망) 실시간 모니터링</h2>
+                  <span class="benchmark-tag">담당 조사역 더존 긴급쪽지 자동발송 대상</span>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px;">
+                <div style="padding:10px; border:1px solid var(--status-ok-border); border-radius:6px; background:var(--status-ok-bg); cursor:pointer;" data-anomaly-jump="NORMAL_COMPLETE">
+                  <div style="font-size:11.5px; font-weight:700; color:var(--status-ok);">정상완료 (동의완수)</div>
+                  <div style="font-size:18px; font-weight:700; font-family:var(--font-mono); margin:3px 0;">1,344건</div>
+                  <div style="font-size:11px; color:var(--text-secondary);">일반 결과쪽지 발송</div>
+                </div>
+                <div style="padding:10px; border:1px solid var(--status-warn-border); border-radius:6px; background:var(--status-warn-bg); cursor:pointer;" data-anomaly-jump="DIRECT_CALL_REQ">
+                  <div style="font-size:11.5px; font-weight:700; color:var(--status-warn);">담당자 직접통화 희망</div>
+                  <div style="font-size:18px; font-weight:700; font-family:var(--font-mono); margin:3px 0;">35건</div>
+                  <div style="font-size:11px; color:var(--text-secondary);">더존 긴급 콜백쪽지</div>
+                </div>
+                <div style="padding:10px; border:1px solid var(--status-danger-border); border-radius:6px; background:var(--status-danger-bg); cursor:pointer;" data-anomaly-jump="COMPLAINT_HIGH">
+                  <div style="font-size:11.5px; font-weight:700; color:var(--status-danger);">고객 불만사항 감지</div>
+                  <div style="font-size:18px; font-weight:700; font-family:var(--font-mono); margin:3px 0;">14건</div>
+                  <div style="font-size:11px; color:var(--text-secondary);">과실/지연 민원주의</div>
+                </div>
+                <div style="padding:10px; border:1px solid var(--border-strong); border-radius:6px; background:var(--bg-subtle); cursor:pointer;" data-anomaly-jump="AUTH_FAIL">
+                  <div style="font-size:11.5px; font-weight:700; color:var(--text-primary);">본인·차량확인 실패</div>
+                  <div style="font-size:18px; font-weight:700; font-family:var(--font-mono); margin:3px 0;">19건</div>
+                  <div style="font-size:11px; color:var(--text-secondary);">생년월일/차량 불일치</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bento-row-2col">
+            <!-- 좌측: JENNIFER 5 X-View 실시간 트랜잭션 산점도 및 무전환 콜스택 드릴다운 -->
+            <div class="bento-card">
+              <div class="section-header">
+                <div class="section-title-group">
+                  <h2 class="section-title">실시간 X-View 해피콜 트랜잭션 산점도 및 파이프라인 드릴다운</h2>
+                  <span class="benchmark-tag">JENNIFER 5 X-View 표준</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <span class="badge badge-neutral">점선: SLA 임계치 (1,200ms)</span>
+                  <span class="badge badge-blue">포인트 클릭 시 접수번호별 트레이스</span>
+                </div>
+              </div>
+
+              <div class="xview-container">
+                <div class="xview-canvas-wrap">
+                  <canvas id="xviewScatterCanvas" width="760" height="220"></canvas>
+                </div>
+
+                <div class="xview-drilldown-box" id="xviewDrilldownBox">
+                  <div class="drilldown-header">
+                    <span id="drillTitle">선택 접수번호: 2026-HW-094812 (한화손해보험 / 김민수 / 123가4568)</span>
+                    <span class="badge badge-ok" id="drillTotalMs">총 턴 지연: 860ms (정상)</span>
+                  </div>
+                  <div class="latency-bar-track" id="drillBarTrack">
+                    <div class="latency-seg seg-vad" style="width: 14%;">VAD 115ms</div>
+                    <div class="latency-seg seg-stt" style="width: 22%;">STT 182ms</div>
+                    <div class="latency-seg seg-llm" style="width: 32%;">vLLM 274ms</div>
+                    <div class="latency-seg seg-tts" style="width: 17%;">TTS 144ms</div>
+                    <div class="latency-seg seg-db" style="width: 15%;">UPSERT+더존 145ms</div>
+                  </div>
+                  <div style="font-family: var(--font-mono); font-size: 11.5px; color: var(--text-secondary);" id="drillSqlTrace">
+                    [TRACE] DB배당감지(ASSIGNED) -&gt; 본인·생년월일·차량(123가4568)·동의 확인 -&gt; Biz플랫폼 UPSERT(Key=2026-HW-094812) -&gt; 더존 쪽지 API(박성훈 조사역 SENT_200_OK)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 우측: WhaTap Flex 보드 30채널 실시간 보이스봇 매트릭스 -->
+            <div class="bento-card">
+              <div class="section-header">
+                <div class="section-title-group">
+                  <h2 class="section-title">30채널 AI 해피콜 보이스봇 실시간 상태 매트릭스</h2>
+                  <span class="benchmark-tag">WhaTap Flex Board 그리드</span>
+                </div>
+                <span class="badge badge-ok">클릭 시 우측 슬라이드 드로어 호출</span>
+              </div>
+              <div class="channel-matrix-grid" id="channelMatrixGrid"></div>
+            </div>
+          </div>
+
+          <!-- 하단 1: 5대 분리 인프라 환경별 독립 JAR · 전용 포트 · 전용 스크립트 실시간 상태 -->
+          <div class="bento-card" style="margin-bottom: 16px;">
+            <div class="section-header">
+              <div class="section-title-group">
+                <h2 class="section-title">분산 인프라 환경별 독립 실행 JAR · 전용 포트 · 배포/기동 스크립트 분리 현황</h2>
+                <span class="benchmark-tag">5-Tier 물리/논리 망분리 마이크로서비스 아키텍처</span>
+              </div>
+              <span class="badge badge-ok" id="clusterHealthSummaryBadge">5개 독립 JAR 프로세스 전수 UP</span>
+            </div>
+            <div class="data-grid-wrap">
+              <table class="enterprise-table">
+                <thead>
+                  <tr>
+                    <th>인프라 노드 ID / 망 구분</th>
+                    <th>담당 서비스 및 모듈</th>
+                    <th>독립 실행 JAR 파일명</th>
+                    <th>전용 포트 (로컬 / 운영)</th>
+                    <th>전용 데이터 경로</th>
+                    <th>개별 빌드·기동·중지 스크립트</th>
+                    <th>실시간 상태</th>
+                  </tr>
+                </thead>
+                <tbody id="clusterNodeTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 하단 2: OpsNow360 & Ncloud Cloud Insight GPU/Speech/PBX 인프라 자원 토폴로지 -->
+          <div class="bento-card">
+            <div class="section-header">
+              <div class="section-title-group">
+                <h2 class="section-title">폐쇄망 온프레미스 5-Node 서버 자원 및 처리량 현황</h2>
+                <span class="benchmark-tag">OpsNow360 &amp; Ncloud Cloud Insight 표준</span>
+              </div>
+              <span class="badge badge-ok">전체 노드 정상 가동</span>
+            </div>
+            <div class="infra-node-grid" id="infraNodeGrid"></div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             [TAB 2] Biz플랫폼 해피콜 원장(접수번호 Key UPSERT) 및 더존 쪽지 내역
+             ================================================================== -->
+        <div class="tab-pane" id="tab-ledger">
+          <div class="bento-card">
+            <div class="section-header">
+              <div class="section-title-group">
+                <h2 class="section-title">히어로손해사정 Biz플랫폼 배당·해피콜 원장 (Key: 접수번호 UPSERT &amp; 더존 쪽지 발송 내역)</h2>
+                <span class="benchmark-tag">Toss 필터 · WebSquare 그리드 · flex/Amaranth 10 우측 드로어</span>
+              </div>
+              <span class="badge badge-blue">행을 클릭하면 우측 드로어에서 접수번호 UPSERT 상세·더존 쪽지 원문·STT 대화록을 확인합니다</span>
+            </div>
+
+            <!-- Toss Payments 스타일 인라인 태그 필터 바 -->
+            <div class="filter-toolbar">
+              <div class="filter-chip-group" id="ledgerFilterChips">
+                <button type="button" class="filter-chip active" data-filter="ALL">전체 배당원장</button>
+                <button type="button" class="filter-chip" data-filter="HANWHA">한화손해보험</button>
+                <button type="button" class="filter-chip" data-filter="CARROT">캐롯손해보험</button>
+                <button type="button" class="filter-chip" data-filter="LOTTE">롯데손해보험</button>
+                <button type="button" class="filter-chip" data-filter="DIRECT_CALL_REQ">직접통화 희망</button>
+                <button type="button" class="filter-chip" data-filter="COMPLAINT_HIGH">고객 불만사항</button>
+                <button type="button" class="filter-chip" data-filter="AUTH_FAIL">본인·차량확인 실패</button>
+                <button type="button" class="filter-chip" data-filter="NORMAL_COMPLETE">정상완료</button>
+              </div>
+
+              <div class="toolbar-right">
+                <input type="text" class="input-text" id="ledgerSearchInput" placeholder="접수번호, 고객명, 차량번호(123가4568), 담당자 검색..." style="width: 320px;" />
+              </div>
+            </div>
+
+            <!-- 고밀도 데이터 그리드 -->
+            <div class="data-grid-wrap">
+              <table class="enterprise-table">
+                <thead>
+                  <tr>
+                    <th>접수번호 (UPSERT Key)</th>
+                    <th>원수사 및 사고유형</th>
+                    <th>고객명 / 생년월일 / 가입차량번호</th>
+                    <th>배당 담당자 (센터/사번)</th>
+                    <th>4대 확인 (이름·생년월일·차량·동의)</th>
+                    <th>특이사항 및 모니터링 분류</th>
+                    <th>Biz플랫폼 UPSERT</th>
+                    <th>더존 API 쪽지</th>
+                    <th>상세 / 조치</th>
+                  </tr>
+                </thead>
+                <tbody id="ledgerTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             [TAB 3] Biz플랫폼 · 더존 API 연계 명세 및 일배치 대사
+             ================================================================== -->
+        <div class="tab-pane" id="tab-reconcile">
+          <div class="bento-row-equal">
+            <div class="bento-card">
+              <div class="section-header">
+                <div class="section-title-group">
+                  <h2 class="section-title">히어로손해사정 Biz플랫폼(기간계) 및 더존(Douzone) 그룹웨어 연계 인터페이스</h2>
+                  <span class="benchmark-tag">핵심 Key: 접수번호(receipt_no)</span>
+                </div>
+              </div>
+              <div class="data-grid-wrap">
+                <table class="enterprise-table">
+                  <thead>
+                    <tr>
+                      <th>IF ID</th>
+                      <th>연계 업무명</th>
+                      <th>송수신 구간</th>
+                      <th>방식 / 주기</th>
+                      <th>핵심 Key 및 처리 정책</th>
+                      <th>상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>IF-BIZ-001</strong></td>
+                      <td>원수사 배당 DB 실시간 감지</td>
+                      <td>Biz플랫폼 DB -&gt; Node 1</td>
+                      <td>DB Polling / CDC (초단위)</td>
+                      <td>한화·캐롯·롯데 배당건 중 담당자 배당완료(ASSIGNED) 즉시 발신</td>
+                      <td><span class="badge badge-ok">정상</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>IF-BIZ-002</strong></td>
+                      <td>해피콜 결과 기간계 실시간 UPSERT</td>
+                      <td>Node 4 -&gt; Biz플랫폼 DB</td>
+                      <td>ON CONFLICT UPSERT</td>
+                      <td><strong>Key: 접수번호(receipt_no)</strong> 기준 이름·생년월일·차량·동의·특이사항 즉시 UPSERT</td>
+                      <td><span class="badge badge-ok">정상</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>IF-DZ-001</strong></td>
+                      <td>배당 담당자 더존 API 쪽지 알림</td>
+                      <td>Node 4 -&gt; 더존 그룹웨어</td>
+                      <td>REST API (실시간)</td>
+                      <td>배당 조사역 사번(adjuster_id) 앞 해피콜 결과 및 특이사항(긴급) 쪽지 발송</td>
+                      <td><span class="badge badge-ok">정상</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>IF-MON-001</strong></td>
+                      <td>특이사항 통계 및 모니터링 적재</td>
+                      <td>Node 4 -&gt; Node 5 웹서비스</td>
+                      <td>실시간 동기화</td>
+                      <td>본인확인실패·고객불만·직접통화희망·정상완료 통계 및 STT/녹취 조회</td>
+                      <td><span class="badge badge-ok">정상</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>IF-BIZ-003</strong></td>
+                      <td>일배치 배당-UPSERT-쪽지 대사</td>
+                      <td>Node 4 &lt;-&gt; Biz플랫폼 DB</td>
+                      <td>매일 01:00 / 수동 실행</td>
+                      <td>당일 원수사 배당 접수번호 전수 대사 및 미동기화 자동 복구</td>
+                      <td><span class="badge badge-ok">정상</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bento-card">
+              <div class="section-header">
+                <div class="section-title-group">
+                  <h2 class="section-title">원수사 배당 건수 vs Biz플랫폼 UPSERT · 더존 쪽지 정합성 대사 이력</h2>
+                  <span class="benchmark-tag">Zero Data Loss 보장</span>
+                </div>
+                <button type="button" class="btn btn-primary" id="btnRunReconcileNow">정합성 대사(IF-BIZ-003) 즉시 실행</button>
+              </div>
+              <div class="data-grid-wrap">
+                <table class="enterprise-table">
+                  <thead>
+                    <tr>
+                      <th>대사 실행 ID</th>
+                      <th>실행 일시</th>
+                      <th>원수사 배당 건수</th>
+                      <th>Biz플랫폼 UPSERT 완료</th>
+                      <th>DLQ 자동복구</th>
+                      <th>불일치 건수</th>
+                      <th>결과</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reconcileTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ======================================================================
+         컨텍스트 유지형 우측 슬라이드 드로어 (접수번호 UPSERT 상세 & 더존 API 쪽지 & STT 전문)
+         ====================================================================== -->
+    <aside class="slide-over-drawer" id="detailSlideDrawer">
+      <div class="drawer-header">
+        <div>
+          <div style="font-size:14px; font-weight:700;" id="drawerCallTitle">접수번호별 해피콜 상세 · Biz플랫폼 UPSERT · 더존 쪽지</div>
+          <div style="font-size:11.5px; color:var(--text-muted);" id="drawerCallSub">접수번호(Key): 2026-HW-094812 | 원수사: 한화손해보험</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" class="btn" id="btnCloseDrawer">닫기 (ESC)</button>
+        </div>
+      </div>
+
+      <div class="drawer-body">
+        <!-- 1. Biz플랫폼 기간계 실시간 UPSERT 결과 (Key: 접수번호) -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">
+            <span>1. 기간계(Biz플랫폼) 실시간 UPSERT 원장 (Key: 접수번호)</span>
+            <span class="badge badge-ok" id="drawerUpsertBadge">UPSERT_COMPLETED</span>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:12px; margin-bottom:8px;">
+            <div>접수번호(Key): <strong id="drawerReceiptKey" style="font-family:var(--font-mono); color:var(--accent-primary);">2026-HW-094812</strong></div>
+            <div>원수사 / 담보: <strong id="drawerInsurerInfo">한화손해보험</strong></div>
+            <div>① 이름 확인: <strong id="drawerVerifyName">Y (김민수)</strong></div>
+            <div>② 생년월일 확인: <strong id="drawerVerifyBirth">Y (850515)</strong></div>
+            <div>③ 가입차량번호 확인: <strong id="drawerVerifyVehicle">Y (123가4568)</strong></div>
+            <div>④ 개인정보동의: <strong id="drawerConsentMode">Y (DTMF_1)</strong></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--border-subtle);">
+            <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">ON CONFLICT (receipt_no) DO UPDATE</span>
+            <button type="button" class="btn btn-primary" id="btnApproveStaging" style="height:28px;">Biz플랫폼 즉시 재-UPSERT 실행</button>
+          </div>
+        </div>
+
+        <!-- 2. 배당 담당자 더존(Douzone) API 쪽지 알림 발송 내역 -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">
+            <span>2. 배당 담당자 더존(Douzone) API 쪽지 알림 발송 내역</span>
+            <span class="badge badge-ok" id="drawerStagingBadge">SENT_200_OK</span>
+          </div>
+          <div style="font-size:12px; margin-bottom:6px;">
+            수신 담당자: <strong id="drawerStagingField">박성훈 조사역 (HERO-2041 / 수도권대인보상1센터)</strong>
+          </div>
+          <div style="padding:8px 10px; background:var(--bg-active-tint); border:1px solid #bfdbfe; border-radius:4px; font-size:12px; margin-bottom:8px;">
+            <div style="font-weight:700; color:var(--accent-primary); margin-bottom:4px;" id="drawerStagingBefore">[한화손해보험 AI해피콜 완료] 접수번호 2026-HW-094812</div>
+            <pre style="white-space:pre-wrap; font-family:var(--font-sans); font-size:11.5px; color:var(--text-primary);" id="drawerStagingAfter"></pre>
+          </div>
+          <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button type="button" class="btn" id="btnRejectStaging">특이사항 긴급 플래그 전환</button>
+            <button type="button" class="btn btn-success" id="btnResendDouzoneNote">더존 API 쪽지 즉시 재발송</button>
+          </div>
+        </div>
+
+        <!-- 3. AI 3줄 핵심 요약 및 특이사항/불만/직접통화 모니터링 -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">
+            <span>3. AI 3줄 요약 및 특이사항 모니터링 기록</span>
+            <span class="badge badge-blue" id="drawerRiskBadge">정상완료</span>
+          </div>
+          <div id="drawerSummaryLines" style="font-size:12.5px; display:flex; flex-direction:column; gap:5px; background:var(--bg-subtle); padding:10px; border-radius:4px;"></div>
+          <div style="margin-top:8px; font-size:12px; color:var(--text-secondary);">
+            <strong>고객 특이사항 / 요청사항 메모:</strong> <span id="drawerTodoText"></span>
+          </div>
+        </div>
+
+        <!-- 4. 화자 분리 STT 대화록 및 녹취 무결성 해시 -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">
+            <span>4. 화자 분리 STT 대화록 및 PII 묵음 녹취 (SHA-256)</span>
+            <span class="badge badge-neutral" id="drawerMuteInfo">묵음 구간 적용</span>
+          </div>
+          <div style="padding:6px 10px; background:var(--bg-subtle); border:1px solid var(--border-subtle); border-radius:4px; margin-bottom:8px; font-size:11px; color:var(--text-secondary);">
+            <div>PII 묵음 구간: <strong id="drawerMuteRangesText"></strong></div>
+            <div style="font-family:var(--font-mono); word-break:break-all;">SHA-256: <span id="drawerSha256"></span></div>
+          </div>
+          <div class="transcript-list" id="drawerTranscriptList"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
