@@ -19,7 +19,7 @@
       <div class="gnb-actions">
         <div class="env-pill" id="serverEnvBadge">
           <span class="status-dot"></span>
-          <span id="serverEnvText">LOCAL / 5-Node Cluster 정상 가동</span>
+          <span id="serverEnvText">LOCAL / 3-Node (물리 2대) + FreePBX AudioSocket 가동</span>
         </div>
       </div>
     </header>
@@ -42,7 +42,7 @@
       </div>
       <div class="mdi-meta-info">
         <span>UPSERT Key: <strong>접수번호(receipt_no)</strong></span>
-        <span id="lastSyncedTimeText">최종 동기화: 2026-10-15 14:25:00</span>
+        <span id="lastSyncedTimeText">최종 동기화: 2026-10-15 21:05:00</span>
       </div>
     </nav>
 
@@ -53,8 +53,8 @@
         <section class="bento-kpi-grid">
           <div class="bento-card">
             <div class="kpi-label">
-              <span>원수사 배당 감지 및 가동 채널</span>
-              <span class="badge badge-blue">DB 폴링 감시중</span>
+              <span>원수사 배당 감지 &amp; FreePBX 채널</span>
+              <span class="badge badge-blue">AudioSocket :19092/9092</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-value" id="kpiActiveChannels">24</span>
@@ -98,7 +98,7 @@
 
           <div class="bento-card">
             <div class="kpi-label">
-              <span>배당 담당자 더존 쪽지 API (Node 4 내장)</span>
+              <span>배당 담당자 더존 쪽지 API (Node 1 내장)</span>
               <span class="badge badge-ok">/apiproxy/api02A03</span>
             </div>
             <div class="kpi-value-row">
@@ -258,21 +258,60 @@
             </div>
           </div>
 
-          <!-- 하단 1: 5대 분리 인프라 환경별 독립 JAR · 전용 포트 · 전용 스크립트 실시간 상태 -->
+          <!-- 하단 0: FreePBX 17 (Asterisk 20 LTS) 아웃바운드 해피콜 발신(ARI) 및 AudioSocket(16kHz PCM) 실시간 연동 패널 -->
           <div class="bento-card" style="margin-bottom: 16px;">
             <div class="section-header">
               <div class="section-title-group">
-                <h2 class="section-title">분산 인프라 환경별 독립 실행 JAR · 전용 포트 · 배포/기동 스크립트 분리 현황</h2>
-                <span class="benchmark-tag">5-Tier 물리/논리 망분리 마이크로서비스 아키텍처</span>
+                <h2 class="section-title">FreePBX 17 (Asterisk 20 LTS) AI 음성봇 발신(ARI Originate) 및 AudioSocket 실시간 연동</h2>
+                <span class="benchmark-tag">Node 1 내장 AudioSocket TCP (:19092 Local / :9092 Prod) + PJSIP Trunk + ARI (:8088)</span>
               </div>
-              <span class="badge badge-ok" id="clusterHealthSummaryBadge">5개 독립 JAR 프로세스 전수 UP</span>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span class="badge badge-ok" id="freepbxStatusBadge">AudioSocket &amp; ARI READY</span>
+                <button type="button" class="btn btn-primary" id="btnTestFreePbxOriginate">FreePBX 아웃바운드 해피콜 발신 + AudioSocket 실증 실행</button>
+              </div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:10px;">
+              <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-subtle);">
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:600;">1. SIP Trunk (PJSIP :5060)</div>
+                <div style="font-size:14px; font-weight:700; font-family:var(--font-mono); margin:3px 0;" id="fpbxTrunkText">PJSIP/hero-sip-trunk</div>
+                <div style="font-size:11px; color:var(--text-secondary);">코덱: ulaw/alaw/slin16 · RFC4733 DTMF</div>
+              </div>
+              <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-subtle);">
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:600;">2. ARI 발신제어 (:8088)</div>
+                <div style="font-size:14px; font-weight:700; font-family:var(--font-mono); margin:3px 0;" id="fpbxAriText">POST /ari/channels</div>
+                <div style="font-size:11px; color:var(--text-secondary);">Context: [ai-happycall-bot] exten s,1</div>
+              </div>
+              <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-subtle);">
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:600;">3. Node 1 AudioSocket 서버</div>
+                <div style="font-size:14px; font-weight:700; font-family:var(--font-mono); margin:3px 0; color:var(--accent-primary);" id="fpbxAudioSocketText">TCP 0.0.0.0:19092 (Prod 9092)</div>
+                <div style="font-size:11px; color:var(--text-secondary);">0x01 UUID · 0x03 DTMF · 0x10 16kHz PCM</div>
+              </div>
+              <div style="padding:10px; border:1px solid var(--border-subtle); border-radius:6px; background:var(--bg-subtle);">
+                <div style="font-size:11.5px; color:var(--text-muted); font-weight:600;">4. 배포 패키지 (freepbx-setup/)</div>
+                <div style="font-size:14px; font-weight:700; font-family:var(--font-mono); margin:3px 0;">Docker &amp; Linux 스크립트 완비</div>
+                <div style="font-size:11px; color:var(--text-secondary);">install_freepbx17_linux.sh · 내선 1001-&gt;9999</div>
+              </div>
+            </div>
+            <div style="padding:8px 12px; background:var(--bg-active-tint); border:1px solid #bfdbfe; border-radius:6px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-primary);" id="freepbxLiveTraceBox">
+              [FreePBX READY] "FreePBX 아웃바운드 해피콜 발신 + AudioSocket 실증 실행" 버튼을 클릭하면 ARI Originate -&gt; AudioSocket(0x01 UUID / 0x03 DTMF / 0x10 PCM) 핸드셰이크 -&gt; Node 2/3 AI 추론 -&gt; Biz플랫폼 UPSERT -&gt; 더존 쪽지(/apiproxy/api02A03) 전 과정이 실시간 실행됩니다.
+            </div>
+          </div>
+
+          <!-- 하단 1: 3-Node 통합 아키텍처 (물리 서버 2대) 독립 JAR · 전용 포트 · 전용 스크립트 실시간 상태 -->
+          <div class="bento-card" style="margin-bottom: 16px;">
+            <div class="section-header">
+              <div class="section-title-group">
+                <h2 class="section-title">3-Node 통합 아키텍처 (구 Node 1+4+5 단일 통합 · 물리 서버 2대 도입) 독립 실행 JAR 및 포트 현황</h2>
+                <span class="benchmark-tag">물리 서버 #1(CPU 통합 코어 + FreePBX + DB) + 물리 서버 #2(Dual-GPU 음성·LLM)</span>
+              </div>
+              <span class="badge badge-ok" id="clusterHealthSummaryBadge">3개 독립 JAR 프로세스 + AudioSocket 전수 UP</span>
             </div>
             <div class="data-grid-wrap">
               <table class="enterprise-table">
                 <thead>
                   <tr>
-                    <th>인프라 노드 ID / 망 구분</th>
-                    <th>담당 서비스 및 모듈</th>
+                    <th>인프라 노드 ID / 물리 서버</th>
+                    <th>담당 서비스 및 모듈 (구 Node 1+4+5 통합 반영)</th>
                     <th>독립 실행 JAR 파일명</th>
                     <th>전용 포트 (로컬 / 운영)</th>
                     <th>전용 데이터 경로</th>
@@ -289,7 +328,7 @@
           <div class="bento-card">
             <div class="section-header">
               <div class="section-title-group">
-                <h2 class="section-title">폐쇄망 온프레미스 5-Node 서버 자원 및 처리량 현황</h2>
+                <h2 class="section-title">폐쇄망 온프레미스 3-Node (물리 서버 2대) 자원 및 처리량 현황</h2>
                 <span class="benchmark-tag">OpsNow360 &amp; Ncloud Cloud Insight 표준</span>
               </div>
               <span class="badge badge-ok">전체 노드 정상 가동</span>
@@ -359,8 +398,8 @@
             <div class="bento-card">
               <div class="section-header">
                 <div class="section-title-group">
-                  <h2 class="section-title">히어로손해사정 Biz플랫폼(기간계) 및 더존(Douzone) 그룹웨어 연계 인터페이스</h2>
-                  <span class="benchmark-tag">핵심 Key: 접수번호(receipt_no)</span>
+                  <h2 class="section-title">히어로손해사정 FreePBX · Biz플랫폼(기간계) · 더존(Douzone) 그룹웨어 연계 인터페이스</h2>
+                  <span class="benchmark-tag">Node 1 통합 코어 서버 단일 집중 · 핵심 Key: 접수번호(receipt_no)</span>
                 </div>
               </div>
               <div class="data-grid-wrap">
@@ -381,37 +420,37 @@
                       <td>원수사 배당 DB 실시간 감지</td>
                       <td>Biz플랫폼 DB -&gt; Node 1</td>
                       <td>DB Polling / CDC (초단위)</td>
-                      <td>한화·캐롯·롯데 배당건 중 담당자 배당완료(ASSIGNED) 즉시 발신</td>
+                      <td>한화·캐롯·롯데 배당건 중 담당자 배당완료(ASSIGNED) 즉시 감지</td>
+                      <td><span class="badge badge-ok">정상</span></td>
+                    </tr>
+                    <tr>
+                      <td><strong>IF-PBX-001</strong></td>
+                      <td>FreePBX 발신 및 AudioSocket 스트리밍</td>
+                      <td>Node 1 &lt;-&gt; FreePBX 17 (Asterisk 20)</td>
+                      <td>ARI(:8088) + AudioSocket(:9092)</td>
+                      <td><code>POST /ari/channels</code> 발신 후 <code>AudioSocket(UUID,127.0.0.1:9092)</code> 양방향 16kHz PCM/DTMF</td>
                       <td><span class="badge badge-ok">정상</span></td>
                     </tr>
                     <tr>
                       <td><strong>IF-BIZ-002</strong></td>
                       <td>해피콜 결과 기간계 실시간 UPSERT</td>
-                      <td>Node 4 -&gt; Biz플랫폼 DB</td>
+                      <td>Node 1 -&gt; Biz플랫폼 DB</td>
                       <td>ON CONFLICT UPSERT</td>
                       <td><strong>Key: 접수번호(receipt_no)</strong> 기준 이름·생년월일·차량·동의·특이사항 즉시 UPSERT</td>
                       <td><span class="badge badge-ok">정상</span></td>
                     </tr>
                     <tr>
                       <td><strong>IF-DZ-001</strong></td>
-                      <td>배당 담당자 더존 쪽지 API (Node 4 내장)</td>
-                      <td>Node 4 -&gt; api.douzone.com</td>
+                      <td>배당 담당자 더존 쪽지 API (Node 1 내장)</td>
+                      <td>Node 1 -&gt; api.douzone.com</td>
                       <td>POST /apiproxy/api02A03</td>
                       <td>ITTM <code>DouzoneApiClient</code> 내장 · <code>HmacSHA256 wehago-sign</code> · <code>groupSeq: gcmsAmaranth32481</code> · <code>callerName: HERO</code></td>
                       <td><span class="badge badge-ok">정상</span></td>
                     </tr>
                     <tr>
-                      <td><strong>IF-MON-001</strong></td>
-                      <td>특이사항 통계 및 모니터링 적재</td>
-                      <td>Node 4 -&gt; Node 5 웹서비스</td>
-                      <td>실시간 동기화</td>
-                      <td>본인확인실패·고객불만·직접통화희망·정상완료 통계 및 STT/녹취 조회</td>
-                      <td><span class="badge badge-ok">정상</span></td>
-                    </tr>
-                    <tr>
                       <td><strong>IF-BIZ-003</strong></td>
                       <td>일배치 배당-UPSERT-쪽지 대사</td>
-                      <td>Node 4 &lt;-&gt; Biz플랫폼 DB</td>
+                      <td>Node 1 &lt;-&gt; Biz플랫폼 DB</td>
                       <td>매일 01:00 / 수동 실행</td>
                       <td>당일 원수사 배당 접수번호 전수 대사 및 미동기화 자동 복구</td>
                       <td><span class="badge badge-ok">정상</span></td>
@@ -486,10 +525,10 @@
           </div>
         </div>
 
-        <!-- 2. 배당 담당자 더존(Douzone) 그룹웨어 쪽지 API 발송 내역 (Node 4 내장 / ITTM DouzoneApiClient) -->
+        <!-- 2. 배당 담당자 더존(Douzone) 그룹웨어 쪽지 API 발송 내역 (Node 1 내장 / ITTM DouzoneApiClient) -->
         <div class="drawer-section">
           <div class="drawer-section-title">
-            <span>2. 배당 담당자 더존 쪽지 API (Node 4 내장 · /apiproxy/api02A03)</span>
+            <span>2. 배당 담당자 더존 쪽지 API (Node 1 내장 · /apiproxy/api02A03)</span>
             <span class="badge badge-ok" id="drawerStagingBadge">SENT_200_OK</span>
           </div>
           <div style="font-size:12px; margin-bottom:4px;">

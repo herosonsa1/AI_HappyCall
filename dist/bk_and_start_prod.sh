@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================================
-# [운영환경 - 폐쇄망 Linux] bk_and_start_prod.sh (노드별 개별 기동 및 전체 통합 기동 지원)
+# [운영환경 - 폐쇄망 Linux] bk_and_start_prod.sh (3-Node 통합 아키텍처 지원)
 # 사용법:
-#   ./bk_and_start_prod.sh all    (기본값: Node 1~5 전체 중지 -> 노드별 백업 -> 복원 -> 개별 포트 기동)
-#   ./bk_and_start_prod.sh node1  (음성망/DMZ: happycall-node1-telephony-gw.jar / Port 8081)
-#   ./bk_and_start_prod.sh node2  (AI음성망  : happycall-node2-speech-ai.jar / Port 8082)
-#   ./bk_and_start_prod.sh node3  (GPU코어망 : happycall-node3-llm-orchestrator.jar / Port 8083)
-#   ./bk_and_start_prod.sh node4  (기간계망  : happycall-node4-legacy-sync.jar / Port 8084)
-#   ./bk_and_start_prod.sh node5  (업무관제망: happycall-node5-admin-console.jar / Port 8080)
+#   ./bk_and_start_prod.sh all    (기본값: Node 1~3 전체 중지 -> 노드별 백업 -> 복원 -> 개별 포트 기동)
+#   ./bk_and_start_prod.sh node1  (통합코어서버: happycall-node1-core-platform.jar / HTTP 8080, AudioSocket 9092)
+#   ./bk_and_start_prod.sh node2  (GPU음성서버 : happycall-node2-speech-ai.jar / HTTP 8082)
+#   ./bk_and_start_prod.sh node3  (GPULLM서버  : happycall-node3-llm-orchestrator.jar / HTTP 8083)
 # ============================================================================
 
 set -euo pipefail
@@ -102,7 +100,7 @@ bk_and_start_single_node() {
 
 case "${TARGET_NODE}" in
     node1)
-        bk_and_start_single_node "node1" "happycall-node1-telephony-gw.jar" "${NODE1_PORT:-8081}" "node1-telephony"
+        bk_and_start_single_node "node1" "happycall-node1-core-platform.jar" "${NODE1_PORT:-8080}" "node1-core"
         ;;
     node2)
         bk_and_start_single_node "node2" "happycall-node2-speech-ai.jar" "${NODE2_PORT:-8082}" "node2-speech"
@@ -110,18 +108,10 @@ case "${TARGET_NODE}" in
     node3)
         bk_and_start_single_node "node3" "happycall-node3-llm-orchestrator.jar" "${NODE3_PORT:-8083}" "node3-llm"
         ;;
-    node4)
-        bk_and_start_single_node "node4" "happycall-node4-legacy-sync.jar" "${NODE4_PORT:-8084}" "node4-legacy"
-        ;;
-    node5)
-        bk_and_start_single_node "node5" "happycall-node5-admin-console.jar" "${NODE5_PORT:-8080}" "node5-console"
-        ;;
     all|*)
-        bk_and_start_single_node "node1" "happycall-node1-telephony-gw.jar" "${NODE1_PORT:-8081}" "node1-telephony"
+        bk_and_start_single_node "node1" "happycall-node1-core-platform.jar" "${NODE1_PORT:-8080}" "node1-core"
         bk_and_start_single_node "node2" "happycall-node2-speech-ai.jar" "${NODE2_PORT:-8082}" "node2-speech"
         bk_and_start_single_node "node3" "happycall-node3-llm-orchestrator.jar" "${NODE3_PORT:-8083}" "node3-llm"
-        bk_and_start_single_node "node4" "happycall-node4-legacy-sync.jar" "${NODE4_PORT:-8084}" "node4-legacy"
-        bk_and_start_single_node "node5" "happycall-node5-admin-console.jar" "${NODE5_PORT:-8080}" "node5-console"
         ;;
 esac
 

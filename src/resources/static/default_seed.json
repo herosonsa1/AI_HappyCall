@@ -1,9 +1,9 @@
 {
   "meta": {
-    "systemName": "히어로손해사정 AI 자동 해피콜 & Biz플랫폼·더존 연계 시스템",
-    "version": "2026.10.15-HERO-PROD",
+    "systemName": "히어로손해사정 AI 자동 해피콜 & FreePBX·Biz플랫폼·더존 3-Node 통합 관제 시스템",
+    "version": "2026.10.15-HERO-3NODE-FREEPBX",
     "reaEvidenceId": "ev_cb69f03e63dbb415ecf696b48d2293882eeb53379a840a71b7a2af98d420eabe",
-    "lastUpdated": "2026-10-15 14:25:00"
+    "lastUpdated": "2026-10-15 21:05:00"
   },
   "kpi": {
     "activeChannels": 24,
@@ -24,21 +24,21 @@
   },
   "infraNodes": [
     {
-      "nodeId": "NODE1-TELEPHONY-GW",
-      "nodeName": "Node 1: Biz플랫폼 배당DB 감시 & 보이스게이트웨이",
-      "engine": "DB Polling(CDC) + Asterisk 20 + RFC2833 DTMF",
-      "ip": "127.0.0.1:18081 (Prod:8081)",
+      "nodeId": "NODE1-CORE-PLATFORM",
+      "nodeName": "Node 1: 통합 코어 서버 (구 Node 1+4+5 단일 통합 · 물리 서버 #1)",
+      "engine": "FreePBX 17 (AudioSocket :19092/9092 + ARI :8088) + Biz플랫폼 UPSERT + ITTM DouzoneApiClient + 웹콘솔",
+      "ip": "127.0.0.1:18080 (Prod:8080 / AudioSocket:9092)",
       "status": "HEALTHY",
-      "cpuUtil": 34,
-      "memUtil": 46,
+      "cpuUtil": 36,
+      "memUtil": 48,
       "vramUtil": 0,
-      "ttftMs": 22,
+      "ttftMs": 18,
       "tps": 100.0
     },
     {
       "nodeId": "NODE2-SPEECH-AI",
-      "nodeName": "Node 2: 차량번호 발음정규화 & Speech AI 서버",
-      "engine": "Faster-Whisper Turbo + CosyVoice 2.0",
+      "nodeName": "Node 2: 차량번호 발음정규화 & Speech AI 서버 (물리 서버 #2 GPU #0)",
+      "engine": "Silero VAD v5 + Faster-Whisper Turbo + CosyVoice 2.0",
       "ip": "127.0.0.1:18082 (Prod:8082)",
       "status": "HEALTHY",
       "cpuUtil": 52,
@@ -49,8 +49,8 @@
     },
     {
       "nodeId": "NODE3-LLM-ORCHESTRATOR",
-      "nodeName": "Node 3: 이름·생년월일·차량·동의 상태머신 & LLM",
-      "engine": "vLLM Qwen2.5-32B-AWQ + 특이사항/불만 분류기",
+      "nodeName": "Node 3: 이름·생년월일·차량·동의 상태머신 & LLM 서버 (물리 서버 #2 GPU #1)",
+      "engine": "vLLM Qwen2.5-14B/32B-AWQ + 특이사항/불만 분류기",
       "ip": "127.0.0.1:18083 (Prod:8083)",
       "status": "HEALTHY",
       "cpuUtil": 44,
@@ -58,18 +58,6 @@
       "vramUtil": 84,
       "ttftMs": 272,
       "tps": 76.5
-    },
-    {
-      "nodeId": "NODE4-LEGACY-SYNC",
-      "nodeName": "Node 4: Biz플랫폼(접수번호) UPSERT & ITTM 더존 쪽지 내장",
-      "engine": "ReceiptNo UPSERT + DouzoneApiClient(/apiproxy/api02A03)",
-      "ip": "127.0.0.1:18084 (Prod:8084)",
-      "status": "HEALTHY",
-      "cpuUtil": 28,
-      "memUtil": 41,
-      "vramUtil": 0,
-      "ttftMs": 34,
-      "tps": 99.8
     }
   ],
   "calls": [
@@ -115,9 +103,9 @@
       "recSha256Hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
       "audioMuteRanges": ["00:18.2~00:21.5 (생년월일 850515 묵음)"],
       "summary3Lines": [
-        "1. [원수사/배당감지] 한화손해보험 위탁 접수번호 2026-HW-094812 (박성훈 조사역 배당) DB 폴링 감지 후 자동 발신",
+        "1. [원수사/배당감지] 한화손해보험 위탁 접수번호 2026-HW-094812 (박성훈 조사역 배당) DB 폴링 감지 후 FreePBX ARI 자동 발신",
         "2. [본인·차량·동의] 김민수 고객 이름(Y), 생년월일(850515:Y), 가입차량번호(123가4568:Y) 및 개인정보동의(DTMF_1:Y) 취득 완료",
-        "3. [기간계UPSERT/더존쪽지] 접수번호(2026-HW-094812) Key로 Biz플랫폼 DB 실시간 UPSERT 및 박성훈 조사역 더존 쪽지 발송 완료"
+        "3. [기간계UPSERT/더존쪽지] Node 1 통합 코어에서 접수번호(2026-HW-094812) Key로 Biz플랫폼 DB 실시간 UPSERT 및 박성훈 조사역 더존 쪽지 발송 완료"
       ],
       "customerNote": "특이사항 없음 (병원 치료 후 진단서 팩스 제출 예정 안내)",
       "triggeredAt": "2026-10-15 13:42:10",

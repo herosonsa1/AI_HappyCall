@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 # ============================================================================
-# [운영환경 - 폐쇄망 Linux] stop_prod.sh (노드별 개별 중지·백업 및 전체 중지·백업 지원)
+# [운영환경 - 폐쇄망 Linux] stop_prod.sh (3-Node 통합 아키텍처 지원)
 # 사용법:
-#   ./stop_prod.sh all    (기본값: Node 1~5 전체 서비스 중지 후 각 노드 데이터 백업)
-#   ./stop_prod.sh node1  (음성망/DMZ: happycall-node1-telephony-gw.jar 중지 및 백업)
-#   ./stop_prod.sh node2  (AI음성망  : happycall-node2-speech-ai.jar 중지 및 백업)
-#   ./stop_prod.sh node3  (GPU코어망 : happycall-node3-llm-orchestrator.jar 중지 및 백업)
-#   ./stop_prod.sh node4  (기간계망  : happycall-node4-legacy-sync.jar 중지 및 백업)
-#   ./stop_prod.sh node5  (업무관제망: happycall-node5-admin-console.jar 중지 및 백업)
+#   ./stop_prod.sh all    (기본값: Node 1~3 전체 서비스 중지 후 각 노드 데이터 백업)
+#   ./stop_prod.sh node1  (통합코어서버: happycall-node1-core-platform.jar 중지 및 백업)
+#   ./stop_prod.sh node2  (GPU음성서버 : happycall-node2-speech-ai.jar 중지 및 백업)
+#   ./stop_prod.sh node3  (GPULLM서버  : happycall-node3-llm-orchestrator.jar 중지 및 백업)
 # ============================================================================
 
 set -euo pipefail
@@ -70,7 +68,7 @@ stop_and_backup_single_node() {
 
 case "${TARGET_NODE}" in
     node1)
-        stop_and_backup_single_node "node1" "happycall-node1-telephony-gw.jar" "node1-telephony"
+        stop_and_backup_single_node "node1" "happycall-node1-core-platform.jar" "node1-core"
         ;;
     node2)
         stop_and_backup_single_node "node2" "happycall-node2-speech-ai.jar" "node2-speech"
@@ -78,18 +76,10 @@ case "${TARGET_NODE}" in
     node3)
         stop_and_backup_single_node "node3" "happycall-node3-llm-orchestrator.jar" "node3-llm"
         ;;
-    node4)
-        stop_and_backup_single_node "node4" "happycall-node4-legacy-sync.jar" "node4-legacy"
-        ;;
-    node5)
-        stop_and_backup_single_node "node5" "happycall-node5-admin-console.jar" "node5-console"
-        ;;
     all|*)
-        stop_and_backup_single_node "node5" "happycall-node5-admin-console.jar" "node5-console"
-        stop_and_backup_single_node "node4" "happycall-node4-legacy-sync.jar" "node4-legacy"
         stop_and_backup_single_node "node3" "happycall-node3-llm-orchestrator.jar" "node3-llm"
         stop_and_backup_single_node "node2" "happycall-node2-speech-ai.jar" "node2-speech"
-        stop_and_backup_single_node "node1" "happycall-node1-telephony-gw.jar" "node1-telephony"
+        stop_and_backup_single_node "node1" "happycall-node1-core-platform.jar" "node1-core"
         ;;
 esac
 

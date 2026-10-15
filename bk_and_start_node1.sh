@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # ============================================================================
 # [Production Linux] bk_and_start_node1.sh
-# - Role      : Node 1 - Telephony & Voice/DTMF Stream Gateway (APP-01/02)
-# - Target JAR: happycall-node1-telephony-gw.jar
-# - Prod Port : 8081
+# - Role      : Node 1 - Unified Core Platform (FreePBX GW + BizPlatform + Douzone + Web Console)
+# - Target JAR: happycall-node1-core-platform.jar
+# - Prod Port : HTTP 8080, Built-in AudioSocket TCP 9092
 # - Pipeline  : 1) Stop running process -> 2) Backup ./data -> 3) Restore & Start
 # ============================================================================
 set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${APP_DIR}"
 
-JAR_NAME="happycall-node1-telephony-gw.jar"
-PORT="$(echo "${PROD_PORT:-8081}")"
+JAR_NAME="happycall-node1-core-platform.jar"
+PORT="$(echo "${PROD_PORT:-8080}")"
 PID_FILE="${APP_DIR}/node1_prod.pid"
 DATA_DIR="${APP_DIR}/data"
 BACKUP_DIR="${APP_DIR}/backup"
@@ -22,7 +22,7 @@ LATEST_ARCHIVE="${BACKUP_DIR}/node1_latest_backup.tar.gz"
 
 mkdir -p "${DATA_DIR}" "${BACKUP_DIR}" "${LOG_DIR}"
 
-echo "[1/3] Stopping running ${JAR_NAME} (Port ${PORT})..."
+echo "[1/3] Stopping running ${JAR_NAME} (HTTP ${PORT}, AudioSocket 9092)..."
 TARGET_PID=""
 [ -f "${PID_FILE}" ] && TARGET_PID="$(cat "${PID_FILE}" 2>/dev/null || true)"
 if [ -z "${TARGET_PID}" ] || ! kill -0 "${TARGET_PID}" 2>/dev/null; then
@@ -56,4 +56,4 @@ nohup java -server -Xms256m -Xmx1024m -Dfile.encoding=UTF-8 \
 
 NEW_PID=$!
 echo "${NEW_PID}" > "${PID_FILE}"
-echo " -> Started ${JAR_NAME} (PID: ${NEW_PID}, Port: ${PORT})"
+echo " -> Started ${JAR_NAME} (PID: ${NEW_PID}, HTTP Port: ${PORT}, AudioSocket Port: 9092)"

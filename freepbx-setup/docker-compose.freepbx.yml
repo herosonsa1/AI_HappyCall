@@ -1,0 +1,45 @@
+# ============================================================================
+# [FreePBX 17 + Asterisk 20 LTS] 로컬(Windows Docker Desktop) 및 리눅스 컨테이너 구성
+# - 용도: 로컬 개발 PC에서 MicroSIP/Zoiper 소프트폰으로 AI 음성봇(Node 1 AudioSocket) 연동 테스트
+#         또는 운영 리눅스 서버(물리 서버 #1)에 컨테이너 방식으로 즉시 배포
+# - 실행: docker compose -f freepbx-setup/docker-compose.freepbx.yml up -d
+# ============================================================================
+version: "3.8"
+
+services:
+  hero-freepbx17:
+    image: tiredofit/freepbx:17-latest
+    container_name: hero-happycall-freepbx17
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - TZ=Asia/Seoul
+      - DB_EMBEDDED=TRUE
+      - ENABLE_FAIL2BAN=FALSE
+      - ENABLE_SSL=FALSE
+      - RTP_START=10000
+      - RTP_FINISH=10100
+      # 로컬 Windows Docker에서 호스트의 Node 1 AudioSocket(19092)으로 연결
+      - NODE1_AUDIOSOCKET_HOST=host.docker.internal
+      - NODE1_AUDIOSOCKET_PORT=19092
+    ports:
+      - "8089:80/tcp"              # FreePBX 17 Web Admin GUI (http://localhost:8089)
+      - "8088:8088/tcp"            # Asterisk 20 ARI REST / WebSocket 포트 (Node 1 -> FreePBX 발신 제어)
+      - "5038:5038/tcp"            # Asterisk 20 AMI (Asterisk Manager Interface) 포트
+      - "5060:5060/udp"            # PJSIP SIP Signaling 포트 (통신사 SIP 트렁크 및 소프트폰)
+      - "5060:5060/tcp"
+      - "10000-10100:10000-10100/udp" # RTP 음성 미디어 포트 대역
+    volumes:
+      - ./asterisk-etc/pjsip_custom.conf:/assets/custom-config/pjsip_custom.conf:ro
+      - ./asterisk-etc/extensions_custom.conf:/assets/custom-config/extensions_custom.conf:ro
+      - ./asterisk-etc/ari_additional_custom.conf:/assets/custom-config/ari_additional_custom.conf:ro
+      - ./asterisk-etc/http_custom.conf:/assets/custom-config/http_custom.conf:ro
+      - ./asterisk-etc/manager_custom.conf:/assets/custom-config/manager_custom.conf:ro
+      - freepbx-data:/data
+      - freepbx-logs:/var/log
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  freepbx-data:
+  freepbx-logs:

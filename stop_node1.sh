@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # ============================================================================
 # [Production Linux] stop_node1.sh
-# - Role      : Node 1 - Telephony & Voice/DTMF Stream Gateway (APP-01/02)
-# - Target JAR: happycall-node1-telephony-gw.jar
+# - Role      : Node 1 - Unified Core Platform (FreePBX GW + BizPlatform + Douzone + Web Console)
+# - Target JAR: happycall-node1-core-platform.jar
 # - Pipeline  : 1) Stop running process -> 2) Backup ./data
 # ============================================================================
 set -euo pipefail
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${APP_DIR}"
 
-JAR_NAME="happycall-node1-telephony-gw.jar"
+JAR_NAME="happycall-node1-core-platform.jar"
 PID_FILE="${APP_DIR}/node1_prod.pid"
 DATA_DIR="${APP_DIR}/data"
 BACKUP_DIR="${APP_DIR}/backup"

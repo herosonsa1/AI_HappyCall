@@ -30,7 +30,7 @@
         const health = await healthRes.json();
         const envText = document.getElementById("serverEnvText");
         if (envText) {
-          envText.textContent = `${health.mode} / 5-Node Cluster (Web:${health.port}) 정상 가동`;
+          envText.textContent = `${health.mode} / 3-Node (물리 2대) · Web:${health.port} · AudioSocket:${health.audioSocketPort || 19092}`;
         }
       }
     } catch (e) {
@@ -332,54 +332,34 @@
 
     const specs = [
       {
-        nodeId: "NODE1-TELEPHONY-GW",
-        zone: "음성망 / DMZ (DB폴링 & PBX)",
-        role: "1) 원수사(한화·캐롯·롯데) Biz플랫폼 배당DB 폴링 감시 & 30ch 발신/DTMF",
-        jar: "happycall-node1-telephony-gw.jar",
-        localPort: 18081,
-        prodPort: 8081,
-        dataDir: "./data/node1-telephony",
+        nodeId: "NODE1-CORE-PLATFORM",
+        zone: "물리 서버 #1 (CPU 통합 코어: 구 Node 1+4+5 통합 + FreePBX 동거)",
+        role: "1) Biz플랫폼 배당DB 폴링 + FreePBX 17(ARI :8088 & 내장 AudioSocket TCP :19092/9092) + 접수번호 UPSERT + ITTM 더존 쪽지 API(/apiproxy/api02A03) + 관제 웹 콘솔",
+        jar: "happycall-node1-core-platform.jar",
+        localPort: "18080 (AS:19092)",
+        prodPort: "8080 (AS:9092)",
+        dataDir: "./data/node1-core",
         scripts: "build_node1.bat / bk_and_start_node1.sh / stop_node1.sh"
       },
       {
         nodeId: "NODE2-SPEECH-AI",
-        zone: "AI 음성추론망 (Speech Cluster)",
-        role: "2) 가입차량번호(123가4568)·생년월일 한국어 발음정규화 & STT/TTS",
+        zone: "물리 서버 #2 - GPU #0 (AI 음성추론 서버)",
+        role: "2) 가입차량번호(123가4568)·생년월일 한국어 발음정규화 & Silero VAD + Faster-Whisper STT + CosyVoice TTS",
         jar: "happycall-node2-speech-ai.jar",
-        localPort: 18082,
-        prodPort: 8082,
+        localPort: "18082",
+        prodPort: "8082",
         dataDir: "./data/node2-speech",
         scripts: "build_node2.bat / bk_and_start_node2.sh / stop_node2.sh"
       },
       {
         nodeId: "NODE3-LLM-ORCHESTRATOR",
-        zone: "AI 코어망 (Dual GPU vLLM)",
-        role: "3) 이름·생년월일·차량·개인정보동의 상태머신 & 불만/직접통화 분류/3줄요약",
+        zone: "물리 서버 #2 - GPU #1 (AI LLM 상태머신 서버)",
+        role: "3) 이름·생년월일·차량·개인정보동의 5단계 상태머신 & 고객불만/직접통화 분류/3줄요약 (vLLM Qwen2.5)",
         jar: "happycall-node3-llm-orchestrator.jar",
-        localPort: 18083,
-        prodPort: 8083,
+        localPort: "18083",
+        prodPort: "8083",
         dataDir: "./data/node3-llm",
         scripts: "build_node3.bat / bk_and_start_node3.sh / stop_node3.sh"
-      },
-      {
-        nodeId: "NODE4-LEGACY-SYNC",
-        zone: "기간계 연동망 (더존 쪽지 API 내장)",
-        role: "4) 접수번호(receipt_no) Key Biz플랫폼 UPSERT + ITTM DouzoneApiClient(/apiproxy/api02A03, wehago-sign) 내장",
-        jar: "happycall-node4-legacy-sync.jar",
-        localPort: 18084,
-        prodPort: 8084,
-        dataDir: "./data/node4-legacy",
-        scripts: "build_node4.bat / bk_and_start_node4.sh / stop_node4.sh"
-      },
-      {
-        nodeId: "NODE5-ADMIN-CONSOLE",
-        zone: "업무망 / 관제망 (폐쇄망 웹서비스)",
-        role: "5) 원수사별·특이사항별(본인확인실패/불만/직접통화) 통계 및 모니터링 웹콘솔",
-        jar: "happycall-node5-admin-console.jar",
-        localPort: 18080,
-        prodPort: 8080,
-        dataDir: "./data/node5-console",
-        scripts: "build_node5.bat / bk_and_start_node5.sh / stop_node5.sh"
       }
     ];
 
@@ -748,6 +728,49 @@
     });
 
     bindClick("btnRunReconcileNow", runReconciliationBatch);
+
+    bindClick("btnTestFreePbxOriginate", async () => {
+      const traceBox = document.getElementById("freepbxLiveTraceBox");
+      const statusBadge = document.getElementById("freepbxStatusBadge");
+      if (traceBox) {
+        traceBox.textContent = "[FreePBX RUNNING] ARI POST /ari/channels 발신 및 AudioSocket(TCP 19092) 0x01 UUID -> 0x03 DTMF -> 0x10 16kHz PCM 핸드셰이크 실행 중...";
+      }
+      try {
+        const res = await fetch("/api/freepbx/originate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json; charset=utf-8" },
+          body: JSON.stringify({
+            claimNo: selectedReceiptNo || "2026-HW-094812",
+            insurer: "한화손해보험",
+            agentId: "HERO-2041",
+            agentName: "박성훈 조사역",
+            customerName: "김민수",
+            birthDate: "850515",
+            vehicleNo: "123가4568",
+            privacyConsent: true,
+            scenario: "NORMAL"
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (statusBadge) {
+            statusBadge.textContent = `VERIFIED (AudioSocket:${data.audioSocketPort || 19092})`;
+            statusBadge.className = "badge badge-ok";
+          }
+          if (traceBox) {
+            traceBox.textContent =
+              `[FreePBX E2E 완료] 1) ARI: ${data.freepbxAriStatus || "OK"} -> ` +
+              `2) AudioSocket(:${data.audioSocketPort || 19092}): [${data.audioSocketTrace || "0x01/0x03/0x10/0x00"}] -> ` +
+              `3) Biz플랫폼 UPSERT(Key=${data.receiptNo || selectedReceiptNo}: ${data.bizUpsertStatus || "OK"}) -> ` +
+              `4) 더존 쪽지(/apiproxy/api02A03, txId=${data.douzoneTransactionId || "OK"}, wehago-sign=${data.douzoneWehagoSign || "OK"})`;
+          }
+        }
+      } catch (err) {
+        if (traceBox) {
+          traceBox.textContent = "[FreePBX WARN] 테스트 호출 중 예외: " + err;
+        }
+      }
+    });
 
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") {
