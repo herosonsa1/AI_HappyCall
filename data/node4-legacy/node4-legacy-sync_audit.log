@@ -43,3 +43,6 @@
 [2026-10-15 14:38:01.799] [LOCAL] [NODE4-LEGACY-SYNC] [SERVER_START] Port=18084 (BizPlatform UPSERT & Douzone Note API) 기동 완료
 [2026-10-15 15:02:12.054] [LOCAL] [NODE4-LEGACY-SYNC] [SERVER_START] Port=18084 (BizPlatform UPSERT & Douzone Note API) 기동 완료
 [2026-10-15 16:03:34.830] [LOCAL] [NODE4-LEGACY-SYNC] [SERVER_START] Port=18084 (BizPlatform UPSERT & Douzone Note API) 기동 완료
+[2026-10-15 17:15:18.879] [LOCAL] [NODE4-LEGACY-SYNC] [SERVER_START] Port=18084 | BizPlatform UPSERT & ITTM DouzoneApiClient(https://api.douzone.com/apiproxy/api02A03, groupSeq=gcmsAmaranth32481) 통합 기동 완료
+[2026-10-15 17:15:33.436] [LOCAL] [NODE4-LEGACY-SYNC] [DOUZONE_API02A03_VERIFIED] URL=https://api.douzone.com/apiproxy/api02A03 | txId=a53e8974afcf41258cdefa32e431f2 | wehago-sign=1vWB1slrZy9pP48jCr2b2gWkebabzzFqBRPw5utcVvA= | recv=["HERO-2041"]
+[2026-10-15 17:15:33.438] [LOCAL] [NODE4-LEGACY-SYNC] [IF_DZ_001_API02A03_SEND] ReceiptNo=2026-HW-094812 | Receiver=HERO-2041 | txId=a53e8974afcf41258cdefa32e431f2 | Status=SENT_200_OK (LOCAL_VERIFIED_SIGN)

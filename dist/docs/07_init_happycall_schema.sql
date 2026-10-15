@@ -1,5 +1,5 @@
 -- ============================================================================
--- [히어로손해사정 AI 자동 해피콜 플랫폼 및 Biz플랫폼(기간계) · 더존 API 연계 표준 DB 스키마]
+-- [히어로손해사정 AI 자동 해피콜 플랫폼 및 Biz플랫폼(기간계) · ITTM 더존 쪽지 API 연계 표준 DB 스키마]
 -- 대상 DBMS: PostgreSQL 16 / 기간계 Biz플랫폼 DB (핵심 연계 Key: 접수번호 receipt_no)
 -- ============================================================================
 
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS TB_BIZ_CLAIM_ASSIGN (
     birth_ymd           CHAR(6) NOT NULL,                      -- 생년월일 6자리 (예: 850515)
     vehicle_no          VARCHAR(24) NOT NULL,                  -- 가입/사고 차량번호 (예: 123가4568)
     assign_status       VARCHAR(24) NOT NULL DEFAULT 'ASSIGNED', -- WAIT_ASSIGN / ASSIGNED (담당자 배당 완료)
-    adjuster_id         VARCHAR(32) NOT NULL,                  -- 배당 담당자(조사역) 사번 (더존 ID)
+    adjuster_id         VARCHAR(32) NOT NULL,                  -- 배당 담당자(조사역) 사번 (더존 recvloginId)
     adjuster_name       VARCHAR(40) NOT NULL,                  -- 배당 담당자 성명
     adjuster_dept       VARCHAR(60) NOT NULL,                  -- 배당 담당 부서/센터
     happycall_status    VARCHAR(24) NOT NULL DEFAULT 'WAIT',   -- WAIT / DIALING / COMPLETED / ESCALATED
@@ -46,17 +46,22 @@ CREATE TABLE IF NOT EXISTS TB_BIZ_HAPPYCALL_UPSERT (
     upserted_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. 배당 담당자 더존(Douzone) 그룹웨어 API 쪽지 알림 발송 이력 테이블 (IF-DZ-001)
+-- 3. Node 4 내장 ITTM 더존(Douzone) 그룹웨어 쪽지 API (/apiproxy/api02A03) 발송 이력 테이블 (IF-DZ-001)
 CREATE TABLE IF NOT EXISTS TB_DOUZONE_NOTE_LOG (
     note_id             VARCHAR(48) PRIMARY KEY,
-    receipt_no          VARCHAR(40) NOT NULL,                  -- 접수번호
+    receipt_no          VARCHAR(40) NOT NULL,                  -- 접수번호 (FK)
     insurer_name        VARCHAR(40) NOT NULL,                  -- 원수사명
-    receiver_id         VARCHAR(32) NOT NULL,                  -- 배당 담당자 더존 사번
+    receiver_id         VARCHAR(32) NOT NULL,                  -- 배당 담당자 더존 사번 (body.recvloginId)
     receiver_name       VARCHAR(40) NOT NULL,                  -- 배당 담당자 성명
     receiver_dept       VARCHAR(60) NOT NULL,                  -- 소속 센터/팀
-    urgency_level       VARCHAR(16) NOT NULL DEFAULT 'NORMAL', -- NORMAL / URGENT (불만·직접통화·본인확인실패 시 URGENT)
+    api_endpoint        VARCHAR(120) NOT NULL DEFAULT 'https://api.douzone.com/apiproxy/api02A03',
+    group_seq           VARCHAR(32) NOT NULL DEFAULT 'gcmsAmaranth32481',
+    caller_name         VARCHAR(16) NOT NULL DEFAULT 'HERO',
+    transaction_id      VARCHAR(32) NOT NULL,                  -- 30자리 UUID (transaction-id 헤더)
+    wehago_sign         VARCHAR(128) NOT NULL,                 -- HmacSHA256 Base64 서명 (wehago-sign 헤더)
+    urgency_level       VARCHAR(16) NOT NULL DEFAULT 'NORMAL', -- NORMAL / URGENT
     note_title          VARCHAR(200) NOT NULL,
-    note_content        TEXT NOT NULL,
+    note_content        TEXT NOT NULL,                         -- sanitizeMessageLinks() 적용 본문
     api_status          VARCHAR(20) NOT NULL DEFAULT 'SENT_200_OK',
     sent_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

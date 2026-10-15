@@ -199,14 +199,23 @@ public class AdminConsoleServer {
             // 3. Node 3 (GPU vLLM Orchestrator) 호출
             NodeHttpSupport.httpPostJson(node3Url + "/api/orchestrator/transition", body, 1200);
 
-            // 4. Node 4 (PII Masking & Legacy Sync Archiver) 호출
+            // 4. Node 4 (BizPlatform UPSERT & 내장형 ITTM DouzoneApiClient /apiproxy/api02A03) 호출
             String node4Res = NodeHttpSupport.httpPostJson(node4Url + "/api/pii/mask-and-archive", body, 1500);
+            if (actionType.contains("DOUZONE") || actionType.contains("ANOMALY")) {
+                String dzPayload = String.format("{\"receiptNo\":\"%s\",\"receiverId\":\"%s\",\"content\":\"%s\"}",
+                    NodeHttpSupport.escapeJson(callId), NodeHttpSupport.escapeJson(rawText), NodeHttpSupport.escapeJson(actionType));
+                NodeHttpSupport.httpPostJson(node4Url + "/api/douzone/note/send", dzPayload, 1500);
+            }
 
             String maskedText;
             String sha256Hash;
+            String wehagoSign = "";
+            String douzoneTxId = "";
             if (node4Res != null && node4Res.contains("\"maskedText\"")) {
                 maskedText = NodeHttpSupport.extractJsonField(node4Res, "maskedText");
                 sha256Hash = NodeHttpSupport.extractJsonField(node4Res, "sha256Hash");
+                wehagoSign = NodeHttpSupport.extractJsonField(node4Res, "douzoneWehagoSign");
+                douzoneTxId = NodeHttpSupport.extractJsonField(node4Res, "douzoneTransactionId");
             } else {
                 maskedText = maskFallback(rawText);
                 sha256Hash = NodeHttpSupport.sha256(callId + "|" + actionType + "|" + maskedText + "|" + System.currentTimeMillis());
@@ -214,12 +223,14 @@ public class AdminConsoleServer {
 
             boolean piiDetected = !maskedText.equals(rawText);
             NodeHttpSupport.appendNodeLog(dataDir, NODE_ID, envMode, actionType.isEmpty() ? "DISTRIBUTED_RPC" : actionType,
-                "CallID=" + callId + " | Route=N1->N2->N3->N4 | SHA256=" + sha256Hash);
+                "CallID=" + callId + " | Route=N1->N2->N3->N4(Douzone:/apiproxy/api02A03) | SHA256=" + sha256Hash);
 
             String resp = String.format(
-                "{\"result\":\"OK\",\"actionType\":\"%s\",\"callId\":\"%s\",\"maskedText\":\"%s\",\"piiDetected\":%b,\"sha256Hash\":\"%s\",\"processedAt\":\"%s\",\"mode\":\"%s\",\"routedNodes\":[\"NODE1-TELEPHONY-GW\",\"NODE2-SPEECH-AI\",\"NODE3-LLM-ORCHESTRATOR\",\"NODE4-LEGACY-SYNC\",\"NODE5-ADMIN-CONSOLE\"]}",
+                "{\"result\":\"OK\",\"actionType\":\"%s\",\"callId\":\"%s\",\"maskedText\":\"%s\",\"piiDetected\":%b,\"sha256Hash\":\"%s\",\"douzoneEndpoint\":\"https://api.douzone.com/apiproxy/api02A03\",\"douzoneGroupSeq\":\"gcmsAmaranth32481\",\"douzoneTransactionId\":\"%s\",\"douzoneWehagoSign\":\"%s\",\"processedAt\":\"%s\",\"mode\":\"%s\",\"routedNodes\":[\"NODE1-TELEPHONY-GW\",\"NODE2-SPEECH-AI\",\"NODE3-LLM-ORCHESTRATOR\",\"NODE4-LEGACY-SYNC\",\"NODE5-ADMIN-CONSOLE\"]}",
                 NodeHttpSupport.escapeJson(actionType), NodeHttpSupport.escapeJson(callId),
-                NodeHttpSupport.escapeJson(maskedText), piiDetected, sha256Hash, NodeHttpSupport.nowString(), envMode
+                NodeHttpSupport.escapeJson(maskedText), piiDetected, sha256Hash,
+                NodeHttpSupport.escapeJson(douzoneTxId), NodeHttpSupport.escapeJson(wehagoSign),
+                NodeHttpSupport.nowString(), envMode
             );
             NodeHttpSupport.sendJson(exchange, 200, resp);
         }

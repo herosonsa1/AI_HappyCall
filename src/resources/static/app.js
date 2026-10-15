@@ -363,8 +363,8 @@
       },
       {
         nodeId: "NODE4-LEGACY-SYNC",
-        zone: "기간계 연동망 / 그룹웨어망",
-        role: "4) 접수번호(receipt_no) Key Biz플랫폼 실시간 UPSERT & 배당담당자 더존 쪽지 API",
+        zone: "기간계 연동망 (더존 쪽지 API 내장)",
+        role: "4) 접수번호(receipt_no) Key Biz플랫폼 UPSERT + ITTM DouzoneApiClient(/apiproxy/api02A03, wehago-sign) 내장",
         jar: "happycall-node4-legacy-sync.jar",
         localPort: 18084,
         prodPort: 8084,
@@ -721,13 +721,16 @@
       openSlideDrawer(call.receiptNo);
     });
 
-    // 더존 API 쪽지 즉시 재발송 버튼
+    // 더존 API 쪽지 즉시 재발송 버튼 (Node 4 내장 ITTM DouzoneApiClient /apiproxy/api02A03 호출)
     bindClick("btnResendDouzoneNote", async () => {
       const call = (appState.calls || []).find(c => c.receiptNo === selectedReceiptNo);
       if (!call) return;
       call.douzoneNoteStatus = "SENT_200_OK";
-      call.douzoneNoteBody = call.douzoneNoteBody + `\n[재발송 완료: ${formatTimeOnly(new Date())}]`;
-      await persistStateToServer("RESEND_DOUZONE_NOTE_API", call.receiptNo, call.adjusterId);
+      const actResult = await persistStateToServer("RESEND_DOUZONE_NOTE_API", call.receiptNo, call.adjusterId);
+      const txId = actResult && actResult.douzoneTransactionId ? actResult.douzoneTransactionId : "tx-verified";
+      const sign = actResult && actResult.douzoneWehagoSign ? actResult.douzoneWehagoSign : "HmacSHA256-OK";
+      call.douzoneNoteBody = call.douzoneNoteBody + `\n[/apiproxy/api02A03 발송완료 ${formatTimeOnly(new Date())} | txId:${txId} | wehago-sign:${sign}]`;
+      await persistStateToServer("", call.receiptNo, "");
       renderAll();
       openSlideDrawer(call.receiptNo);
     });

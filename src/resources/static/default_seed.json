@@ -61,8 +61,8 @@
     },
     {
       "nodeId": "NODE4-LEGACY-SYNC",
-      "nodeName": "Node 4: Biz플랫폼(접수번호) UPSERT & 더존 쪽지 API",
-      "engine": "ReceiptNo UPSERT Worker + Douzone Note Webhook",
+      "nodeName": "Node 4: Biz플랫폼(접수번호) UPSERT & ITTM 더존 쪽지 내장",
+      "engine": "ReceiptNo UPSERT + DouzoneApiClient(/apiproxy/api02A03)",
       "ip": "127.0.0.1:18084 (Prod:8084)",
       "status": "HEALTHY",
       "cpuUtil": 28,

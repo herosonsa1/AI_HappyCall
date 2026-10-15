@@ -9,8 +9,9 @@
 3. **AI 자동 해피콜 발신 및 기간계 실시간 UPSERT (`Key: 접수번호`)**:
    - AI 보이스봇이 고객에게 전화를 걸어 음성(STT) 또는 키패드(RFC 2833 DTMF)로 **① 이름, ② 생년월일(6자리), ③ 가입차량번호(예: `123가4568`), ④ 개인정보동의**를 확인·취득.
    - 통화 종료 즉시 **`접수번호`(`receipt_no`)를 고유 Key로 하여 Biz플랫폼(`TB_BIZ_HAPPYCALL_UPSERT`)에 실시간 UPSERT** (`IF-BIZ-002`).
-4. **배당 담당자 더존(Douzone) API 쪽지 알림 발송**:
-   - 배당된 손해사정 담당자(`adjuster_id`)에게 **더존 그룹웨어 API (`IF-DZ-001`)**를 호출하여 해피콜 완료 결과 및 특이사항(직접통화 요청 등) 쪽지를 실시간 발송.
+4. **배당 담당자 더존(Douzone) 그룹웨어 쪽지 발송 (별도 노드 없이 `Node 4` 내부에 ITTM `DouzoneApiClient` 내장)**:
+   - 사내 **`ITTM(ITSM)` 프로젝트**([`ITSM-prod.jar`](file:///c:/myWork/workspace/scratch/ITTM/dist/ITSM-prod.jar) / [`DouzoneApiClient.java`](file:///c:/myWork/workspace/scratch/ITTM/src/main/java/com/hero/itsm/util/DouzoneApiClient.java))를 REA(`ev_60d4eed27601980a8c180b713c459fc270b45a04722e63f371b60634a1ade6f9`)로 분석하여 별도 노드를 두지 않고 **`Node 4`([`LegacySyncArchiverServer.java`](file:///c:/myWork/workspace/scratch/AI_Call/src/com/hero/happycall/node4/LegacySyncArchiverServer.java)) 내부의 `EmbeddedDouzoneNoteClient`로 직접 내장**했습니다.
+   - UPSERT 직후 `POST https://api.douzone.com/apiproxy/api02A03` (`HmacSHA256 wehago-sign`, `groupSeq: gcmsAmaranth32481`, `callerName: HERO`, `host: portal.herosonsa.co.kr`, `recvloginId: [배당담당자사번]`)를 호출하여 실시간 쪽지를 발송합니다 (`IF-DZ-001`).
 5. **특이사항 통계 및 폐쇄망 모니터링 웹서비스**:
    - 통화 내역(화자분리 STT 전문·3줄 요약)과 특이사항(**본인·차량확인 실패 `AUTH_FAIL`, 고객 불만사항 `COMPLAINT_HIGH`, 직접통화 희망 `DIRECT_CALL_REQ`, 개인정보 미동의 `CONSENT_REJECT`, 정상완료 `NORMAL_COMPLETE`**) 통계를 기록하고 폐쇄망 웹서비스(`Node 5`)에서 실시간 확인.
 
@@ -39,22 +40,23 @@ C:\myWork\workspace\scratch\AI_Call\
 │   ├── com/hero/happycall/node1/TelephonyGatewayServer.java
 │   ├── com/hero/happycall/node2/SpeechAiServer.java
 │   ├── com/hero/happycall/node3/LlmOrchestratorServer.java
-│   ├── com/hero/happycall/node4/LegacySyncArchiverServer.java
+│   ├── com/hero/happycall/node4/LegacySyncArchiverServer.java  # Biz플랫폼 UPSERT + 내장형 ITTM DouzoneApiClient
 │   ├── com/hero/happycall/node5/AdminConsoleServer.java
 │   └── resources/static/                # Zero-CDN 폐쇄망 모니터링 웹 UI (index.html, styles.css, app.js, default_seed.json)
 └── dist/                                # [최종 배포 패키지 및 설계도면 산출물 디렉터리]
     ├── docs/                            # [산출물 및 설계도면 통합 보관 폴더]
-    │   ├── 01_인프라_설계도면.md         # 5대 Node + 별도 필수 추가 인프라 상세 설계도면
-    │   ├── 02_응용프로그램_설계도면.md    # 5대 Node 애플리케이션 + 외부 인프라 어댑터 설계도면 및 DB ERD
+    │   ├── 01_인프라_설계도면.md         # 5대 Node + Node 4 내장 더존 API + 별도 필수 추가 인프라 설계도면
+    │   ├── 02_응용프로그램_설계도면.md    # 5대 Node 애플리케이션 + EmbeddedDouzoneNoteClient + DB ERD
     │   ├── 03_업무프로세스_다이어그램.md  # 히어로손해사정 5단계 실무 프로세스 다이어그램 (Flowchart/Sequence/FSM)
     │   ├── 04_AI_자동_해피콜_서비스_상세구축계획서.md
     │   ├── 05_AI_해피콜_서버별_상세설정_및_프로그램_생성_프롬프트_가이드.md
     │   ├── 06_README_전체패키지_및_배포운영가이드.md
-    │   └── 07_init_happycall_schema.sql
+    │   ├── 07_init_happycall_schema.sql
+    │   └── 08_work_history.md
     ├── node1-telephony-gw/              # Node 1 독립 배포 번들 (Port 18081 / Prod 8081)
     ├── node2-speech-ai/                 # Node 2 독립 배포 번들 (Port 18082 / Prod 8082)
     ├── node3-llm-orchestrator/          # Node 3 독립 배포 번들 (Port 18083 / Prod 8083)
-    ├── node4-legacy-sync/               # Node 4 독립 배포 번들 (Port 18084 / Prod 8084)
+    ├── node4-legacy-sync/               # Node 4 독립 배포 번들 (Port 18084 / Prod 8084, ITTM DouzoneApiClient 내장)
     ├── node5-admin-console/             # Node 5 독립 배포 번들 (Port 18080 / Prod 8080)
     ├── happycall-node1-telephony-gw.jar ~ happycall-node5-admin-console.jar
     ├── bk_and_start_prod.sh
@@ -70,7 +72,7 @@ C:\myWork\workspace\scratch\AI_Call\
 | **Node 1** | 음성망 / DMZ | `happycall-node1-telephony-gw.jar` | `18081` | `8081` | 원수사(한화·캐롯·롯데) Biz플랫폼 배당 DB(`ASSIGNED`) 폴링 감시 및 30ch 발신 / RFC 2833 DTMF 수집 |
 | **Node 2** | AI 음성 추론망 (GPU #1) | `happycall-node2-speech-ai.jar` | `18082` | `8082` | 가입차량번호(`123가4568`)·생년월일(6자리) 한국어 발음 정규화 및 STT / TTS / Barge-in VAD |
 | **Node 3** | AI 코어 추론망 (GPU #2) | `happycall-node3-llm-orchestrator.jar` | `18083` | `8083` | 4대 확인(이름·생년월일·차량번호·개인정보동의) 상태 머신, 불만/직접통화 분류, 통화 3줄 요약 |
-| **Node 4** | 기간계 / 그룹웨어 연동망 | `happycall-node4-legacy-sync.jar` | `18084` | `8084` | **`접수번호`(`receipt_no`) Key 기준 Biz플랫폼 실시간 UPSERT** 및 배당 담당자 **더존 API 쪽지 발송** |
+| **Node 4** | 기간계 연동망 *(더존 쪽지 내장)* | `happycall-node4-legacy-sync.jar` | `18084` | `8084` | **`접수번호`(`receipt_no`) Key 기준 Biz플랫폼 실시간 UPSERT** + **내장 ITTM `DouzoneApiClient`(`/apiproxy/api02A03`, `wehago-sign`) 쪽지 발송** |
 | **Node 5** | 사내 업무 / 관제망 | `happycall-node5-admin-console.jar` | `18080` | `8080` | 원수사별·특이사항별(본인확인실패·고객불만·직접통화희망) 통계 및 모니터링 폐쇄망 웹 콘솔 |
 
 ---

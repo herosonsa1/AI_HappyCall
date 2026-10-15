@@ -98,16 +98,16 @@
 
           <div class="bento-card">
             <div class="kpi-label">
-              <span>배당 담당자 더존 API 쪽지 발송</span>
-              <span class="badge badge-ok">Amaranth 10 연동</span>
+              <span>배당 담당자 더존 쪽지 API (Node 4 내장)</span>
+              <span class="badge badge-ok">/apiproxy/api02A03</span>
             </div>
             <div class="kpi-value-row">
               <span class="kpi-value" id="kpiDouzoneSent">1,412</span>
               <span class="kpi-unit">건 발송</span>
             </div>
             <div class="kpi-subcard">
-              <span>담당 조사역 즉시 알림</span>
-              <strong>200 OK (100%)</strong>
+              <span>groupSeq: gcmsAmaranth32481</span>
+              <strong>wehago-sign 200 OK</strong>
             </div>
           </div>
 
@@ -394,10 +394,10 @@
                     </tr>
                     <tr>
                       <td><strong>IF-DZ-001</strong></td>
-                      <td>배당 담당자 더존 API 쪽지 알림</td>
-                      <td>Node 4 -&gt; 더존 그룹웨어</td>
-                      <td>REST API (실시간)</td>
-                      <td>배당 조사역 사번(adjuster_id) 앞 해피콜 결과 및 특이사항(긴급) 쪽지 발송</td>
+                      <td>배당 담당자 더존 쪽지 API (Node 4 내장)</td>
+                      <td>Node 4 -&gt; api.douzone.com</td>
+                      <td>POST /apiproxy/api02A03</td>
+                      <td>ITTM <code>DouzoneApiClient</code> 내장 · <code>HmacSHA256 wehago-sign</code> · <code>groupSeq: gcmsAmaranth32481</code> · <code>callerName: HERO</code></td>
                       <td><span class="badge badge-ok">정상</span></td>
                     </tr>
                     <tr>
@@ -486,14 +486,17 @@
           </div>
         </div>
 
-        <!-- 2. 배당 담당자 더존(Douzone) API 쪽지 알림 발송 내역 -->
+        <!-- 2. 배당 담당자 더존(Douzone) 그룹웨어 쪽지 API 발송 내역 (Node 4 내장 / ITTM DouzoneApiClient) -->
         <div class="drawer-section">
           <div class="drawer-section-title">
-            <span>2. 배당 담당자 더존(Douzone) API 쪽지 알림 발송 내역</span>
+            <span>2. 배당 담당자 더존 쪽지 API (Node 4 내장 · /apiproxy/api02A03)</span>
             <span class="badge badge-ok" id="drawerStagingBadge">SENT_200_OK</span>
           </div>
-          <div style="font-size:12px; margin-bottom:6px;">
-            수신 담당자: <strong id="drawerStagingField">박성훈 조사역 (HERO-2041 / 수도권대인보상1센터)</strong>
+          <div style="font-size:12px; margin-bottom:4px;">
+            수신 담당자(<code>recvloginId</code>): <strong id="drawerStagingField">박성훈 조사역 (HERO-2041 / 수도권대인보상1센터)</strong>
+          </div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+            POST https://api.douzone.com/apiproxy/api02A03 | groupSeq: gcmsAmaranth32481 | callerName: HERO | HmacSHA256 wehago-sign
           </div>
           <div style="padding:8px 10px; background:var(--bg-active-tint); border:1px solid #bfdbfe; border-radius:4px; font-size:12px; margin-bottom:8px;">
             <div style="font-weight:700; color:var(--accent-primary); margin-bottom:4px;" id="drawerStagingBefore">[한화손해보험 AI해피콜 완료] 접수번호 2026-HW-094812</div>
@@ -501,7 +504,7 @@
           </div>
           <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button type="button" class="btn" id="btnRejectStaging">특이사항 긴급 플래그 전환</button>
-            <button type="button" class="btn btn-success" id="btnResendDouzoneNote">더존 API 쪽지 즉시 재발송</button>
+            <button type="button" class="btn btn-success" id="btnResendDouzoneNote">더존 API 쪽지 즉시 재발송 (/apiproxy/api02A03)</button>
           </div>
         </div>
 
