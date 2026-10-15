@@ -1,3 +1,38 @@
+<style>
+  .markdown-body, body {
+    font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif !important;
+    font-size: 17px !important;
+    line-height: 1.75 !important;
+    color: #0f172a !important;
+  }
+  h1 { font-size: 28px !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important; padding-bottom: 10px !important; }
+  h2 { font-size: 23px !important; font-weight: 700 !important; margin-top: 32px !important; color: #1e293b !important; }
+  h3 { font-size: 19px !important; font-weight: 700 !important; margin-top: 24px !important; color: #334155 !important; }
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 16.5px !important;
+    margin: 18px 0 !important;
+  }
+  th {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    padding: 14px 16px !important;
+    border: 1px solid #cbd5e1 !important;
+    text-align: left !important;
+  }
+  td {
+    padding: 13px 16px !important;
+    border: 1px solid #cbd5e1 !important;
+    vertical-align: top !important;
+    line-height: 1.65 !important;
+  }
+  code, pre {
+    font-size: 15.5px !important;
+  }
+</style>
+
 # 히어로손해사정 AI 자동 해피콜 플랫폼 — 전체 패키지 및 배포·운영 가이드
 
 ---
@@ -18,8 +53,6 @@
 ---
 
 ## 2. 프로젝트 폴더 및 `.\dist\docs` 산출물 구조
-
-불필요한 테스트 항목 및 구버전 잔재 파일을 모두 제거하고, 실제 운영에 필수적인 소스 코드, 인프라 설정, 실행 스크립트, 배포 패키지(`dist\`) 및 설계 문서(`dist\docs\`)만 남긴 표준 디렉터리 구조입니다.
 
 ```text
 C:\myWork\workspace\scratch\AI_Call\
@@ -44,7 +77,7 @@ C:\myWork\workspace\scratch\AI_Call\
 │   ├── com/hero/happycall/node5/AdminConsoleServer.java
 │   └── resources/static/                # Zero-CDN 폐쇄망 모니터링 웹 UI (index.html, styles.css, app.js, default_seed.json)
 └── dist/                                # [최종 배포 패키지 및 설계도면 산출물 디렉터리]
-    ├── docs/                            # [산출물 및 설계도면 통합 보관 폴더]
+    ├── docs/                            # [산출물 및 설계도면 통합 보관 폴더 - 대형 폰트 최적화]
     │   ├── 01_인프라_설계도면.md         # 5대 Node + Node 4 내장 더존 API + 별도 필수 추가 인프라 설계도면
     │   ├── 02_응용프로그램_설계도면.md    # 5대 Node 애플리케이션 + EmbeddedDouzoneNoteClient + DB ERD
     │   ├── 03_업무프로세스_다이어그램.md  # 히어로손해사정 5단계 실무 프로세스 다이어그램 (Flowchart/Sequence/FSM)
@@ -65,15 +98,15 @@ C:\myWork\workspace\scratch\AI_Call\
 
 ---
 
-## 3. 5대 물리/논리 인프라 노드 및 포트 매핑표
+## 3. [도표 1] 5대 물리/논리 인프라 노드 및 포트 매핑표
 
-| 노드 번호 | 인프라 구간 (망 구분) | 독립 실행 JAR 파일명 | 로컬 포트 | 운영 포트 | 핵심 담당 기능 |
-| :---: | :--- | :--- | :---: | :---: | :--- |
-| **Node 1** | 음성망 / DMZ | `happycall-node1-telephony-gw.jar` | `18081` | `8081` | 원수사(한화·캐롯·롯데) Biz플랫폼 배당 DB(`ASSIGNED`) 폴링 감시 및 30ch 발신 / RFC 2833 DTMF 수집 |
-| **Node 2** | AI 음성 추론망 (GPU #1) | `happycall-node2-speech-ai.jar` | `18082` | `8082` | 가입차량번호(`123가4568`)·생년월일(6자리) 한국어 발음 정규화 및 STT / TTS / Barge-in VAD |
-| **Node 3** | AI 코어 추론망 (GPU #2) | `happycall-node3-llm-orchestrator.jar` | `18083` | `8083` | 4대 확인(이름·생년월일·차량번호·개인정보동의) 상태 머신, 불만/직접통화 분류, 통화 3줄 요약 |
-| **Node 4** | 기간계 연동망 *(더존 쪽지 내장)* | `happycall-node4-legacy-sync.jar` | `18084` | `8084` | **`접수번호`(`receipt_no`) Key 기준 Biz플랫폼 실시간 UPSERT** + **내장 ITTM `DouzoneApiClient`(`/apiproxy/api02A03`, `wehago-sign`) 쪽지 발송** |
-| **Node 5** | 사내 업무 / 관제망 | `happycall-node5-admin-console.jar` | `18080` | `8080` | 원수사별·특이사항별(본인확인실패·고객불만·직접통화희망) 통계 및 모니터링 폐쇄망 웹 콘솔 |
+| 노드 | 인프라 구간 (망 구분) | 독립 실행 JAR 및 포트 | 핵심 담당 기능 |
+| :---: | :--- | :--- | :--- |
+| **Node 1** | 음성망 / DMZ | `happycall-node1-telephony-gw.jar`<br>Local `18081` / Prod `8081` | 원수사(한화·캐롯·롯데) Biz플랫폼 배당 DB(`ASSIGNED`) 폴링 감시 및 30ch 발신 / RFC 2833 DTMF 수집 |
+| **Node 2** | AI 음성 추론망 (GPU #1) | `happycall-node2-speech-ai.jar`<br>Local `18082` / Prod `8082` | 가입차량번호(`123가4568`)·생년월일(6자리) 한국어 발음 정규화 및 STT / TTS / Barge-in VAD |
+| **Node 3** | AI 코어 추론망 (GPU #2) | `happycall-node3-llm-orchestrator.jar`<br>Local `18083` / Prod `8083` | 4대 확인(이름·생년월일·차량번호·개인정보동의) 상태 머신, 불만/직접통화 분류, 통화 3줄 요약 |
+| **Node 4** | 기간계 연동망<br>*(더존 쪽지 내장)* | `happycall-node4-legacy-sync.jar`<br>Local `18084` / Prod `8084` | **`접수번호`(`receipt_no`) Key 기준 Biz플랫폼 실시간 UPSERT** + **내장 ITTM `DouzoneApiClient`(`/apiproxy/api02A03`, `wehago-sign`) 쪽지 발송** |
+| **Node 5** | 사내 업무 / 관제망 | `happycall-node5-admin-console.jar`<br>Local `18080` / Prod `8080` | 원수사별·특이사항별(본인확인실패·고객불만·직접통화희망) 통계 및 모니터링 폐쇄망 웹 콘솔 |
 
 ---
 
@@ -87,7 +120,6 @@ cd C:\myWork\workspace\scratch\AI_Call
 - 웹 모니터링 콘솔 접속: `http://localhost:18080/`
 
 ### 4.2 운영(폐쇄망 Linux) 환경 노드별 배포 및 기동
-각 서버에 `dist/node1-telephony-gw` ~ `dist/node5-admin-console` 폴더를 반입한 후 실행합니다:
 ```bash
 chmod +x *.sh
 ./bk_and_start_prod.sh
